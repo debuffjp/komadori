@@ -1,0 +1,19 @@
+<!doctype html>
+<meta charset="utf-8" />
+<style>html,body{margin:0;background:#101418}canvas{display:block}</style>
+<canvas id="c" width="640" height="360"></canvas>
+<script>
+// The picture depends on ?v=: a different value moves and recolours the block, so two renders differ in one place.
+const v = new URLSearchParams(location.search).get("v") ?? "a";
+const c = document.getElementById("c").getContext("2d");
+let n = 0;
+window.__frame = () => {
+  n++;
+  c.fillStyle = "#101418";
+  c.fillRect(0, 0, 640, 360);
+  c.fillStyle = "#38bdf8";
+  c.fillRect(40 + ((n * 3) % 200), 40, 80, 40);
+  c.fillStyle = v === "a" ? "#cffb2d" : "#f472b6";
+  c.fillRect(v === "a" ? 420 : 460, 200, 100, 100);
+};
+</script>

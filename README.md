@@ -30,6 +30,18 @@ On spryte's million-boid demo, a 600-frame 1920x1080 clip (10 s at 60 fps) took 
 
 The clip is the canvas's pixels at its backing size. HTML drawn over the canvas (a title, a logo) is not in it, and a canvas backing size that differs from the viewport gives a clip of the canvas's size. Use the default when you want the page as a person sees it. If Chrome can't encode H.264 at that size, komadori stops with exit code 2 and says to use `--capture screenshot`. It never falls back silently.
 
+## For agents: an MCP server
+
+`komadori-mcp` is komadori as three tool calls, so an agent can render, look and compare without touching files. `render` returns the checks and a contact sheet, `look` returns one frame at full size (or a zoomed crop of a region), and `diff` compares a frame with the same frame of the render before it, so "what did my change do?" is one call.
+
+```json
+{ "mcpServers": { "komadori": { "command": "npx", "args": ["-y", "komadori-mcp"] } } }
+```
+
+Until komadori is on npm, point the command at a checkout instead: `"command": "node", "args": ["D:/komadori/bin/komadori-mcp.mjs"]`.
+
+The three tool definitions come to about 2,200 characters (roughly 540 tokens, estimated at 4 characters a token, not counted). On spryte's 2x rain scene at 1080p, a 120-frame render takes about 5 s, and a crop or a diff about 1 s. Needs Chrome, and ffmpeg only if a render asks for a clip. It has no MCP dependency: the protocol subset it needs (initialize, tools/list, tools/call, ping) is about 100 lines, and the tests run it against the official SDK's client.
+
 ## With spryte
 
 Give your page a stepped mode behind a query string, and point komadori at it:

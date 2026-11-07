@@ -10,6 +10,16 @@ You can't watch a scene run. komadori gives you the next best thing: a few dozen
 4. Open two or three frames at full size (`--keep-frames dir`) before you say it looks right. A contact sheet shrinks every frame to 384 px wide, and fine detail goes first.
 5. Change one thing, then run it again.
 
+## The same loop as tool calls
+
+With `komadori-mcp` the steps above are tool calls, with the images in the result:
+
+1. `render` with `target` (a built folder or URL) and `query` if the page has a stepped mode. Read the checks, look at the contact sheet.
+2. `look` with a `frame`, and `x`, `y`, `w`, `h`, `zoom` to see detail: text, stripes, an edge.
+3. Change one thing, call `render` again with the same frames and samples, then `diff`. It says how much of the frame changed, where, and shows before, after and the difference.
+
+`look` and `diff` work on the last two renders, which the server keeps in memory. Keep `frames` modest in a render: a client may time out on a long one.
+
 ## What it checks
 
 | Check | Result | What it means |
