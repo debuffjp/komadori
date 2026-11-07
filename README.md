@@ -1,8 +1,8 @@
 # Komadori
 
-コマ撮り means taking a scene one frame at a time.
+A 10 second 1080p clip of a million boids takes 11-14 seconds to make, on a laptop GPU. You can't watch a canvas run from a terminal, and neither can your agent. Komadori runs the page in Chrome one frame at a time and hands back what it drew: a contact sheet (one image of sampled frames), a report, and a clip if you ask for one. [bench/capture](bench/capture/README.md) has the measurements.
 
-Komadori runs a web page in Chrome, moves it forward one frame at a time, and checks what it drew. It writes a contact sheet (one image of sampled frames) and a report, and an mp4 if you ask for one. It was built for [spryte](https://debuff.jp/spryte/) scenes. It works with any page that draws on a canvas.
+コマ撮り (Komadori) means stop-motion. It was built for [spryte](https://debuff.jp/spryte/) scenes and works with any page that draws on a canvas.
 
 ```bash
 npx komadori dist --frames 600 --size 1920x1080 --out render --mp4 render/clip.mp4
@@ -26,13 +26,13 @@ Exit code 2 means the render couldn't run, for example because the page never de
 
 ## Making a clip quickly
 
-`--mp4` takes a screenshot of the whole page for every frame, which is slow. `--capture canvas` encodes the canvas inside the page instead, and is about three and a half times faster:
+`--mp4` takes a screenshot of the whole page for every frame, which is slow. `--capture canvas` encodes the canvas inside the page instead, and is about 3x faster (2.6-3.6x across runs):
 
 ```bash
 npx komadori dist --frames 600 --size 1920x1080 --mp4 clip.mp4 --capture canvas
 ```
 
-A 10 second 1080p clip of spryte's million-boid demo took 12 to 14 seconds on a laptop. The clip holds only the canvas, so a title or logo drawn in HTML on top of it is missing. If Chrome can't encode H.264 at your size, Komadori stops and tells you. It never falls back without saying so.
+A 10 second 1080p clip of spryte's million-boid demo took 11-14 seconds on a Radeon 780M and on an RTX 5060 laptop, in Chrome on Windows. The clip holds only the canvas, so a title or logo drawn in HTML on top of it is missing. If Chrome can't encode H.264 at your size, Komadori stops and tells you. It never falls back without saying so.
 
 ## Golden frames
 

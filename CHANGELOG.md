@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Correction: `--capture canvas` is about 3x faster than a screenshot per frame, and 2.6-3.6x across four comparisons on two GPUs. The 0.1.0 notes and README said 3-3.6x, which left out the lowest run. The figures, every run and the script are in `bench/capture`.
+- The package description and README now open with the clip time: 11-14 seconds for 10 seconds of 1080p video.
+
 ## 0.1.1
 
 The README's MCP config was wrong. It said `npx -y komadori-mcp`, but `komadori-mcp` is a command inside the `komadori` package, not a package of its own, so that line returned a 404.

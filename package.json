@@ -1,7 +1,7 @@
 {
   "name": "komadori",
   "version": "0.1.1",
-  "description": "Steps a browser scene frame by frame, checks the frames, and writes a contact sheet, a report and an mp4. Made for spryte scenes, works with any canvas engine.",
+  "description": "Step a web page one frame at a time, check every frame, and make a clip: 10 s of a million boids at 1080p in 11-14 s. Works with any canvas engine.",
   "license": "MIT",
   "type": "module",
   "bin": {
