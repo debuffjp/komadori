@@ -79,3 +79,17 @@ With the first batch scored the same way (`--rescore`), `washed-out-title` stand
 | C: API reference only | 0/3 | 173.2, 154.7, 161.5 |
 
 Six against four runs is too few to call: the gap between A and B is not significant, and the unplanned runs were not a designed sample. But the direction is the opposite of what the tools should do, and the transcripts suggest why. Arm A looked at the contact sheet, saw the title "readable", and stopped at a weak patch. Arm B couldn't look, so it was unsure and drew a bolder one. If that is right, a coarse view gave false confidence, which is what the contact sheet's 384 px frames invite. `render` now tells the agent to `look` before judging text. Whether that changes the result is the next run, and it hasn't been done.
+
+### Arm A again, with the zoom nudge
+
+`render` now ends with "The sheet shows frames at 384 px wide. Before you say text is readable or detail is right, call look on a frame." Three more arm A runs on `washed-out-title` ($0.40 in all, three renders at most, `looks` 0 in every run):
+
+| Run | Pass | Score (lower is better) | How it fixed it |
+| --- | --- | --- | --- |
+| A-1 | pass | 91.1 | normal blend for the title, plus a patch behind it |
+| A-2 | FAIL | 172.4 | normal blend, plus a thin navy outline |
+| A-3 | pass | 60.1 | faded the light itself around the title's area, down to 15% |
+
+That is 2 of 3, where the same arm without the nudge was 0 of 6. Mixing batches, one-sided Fisher p is about 0.08: suggestive, not shown. The three runs also used different fixes, so this could be variance.
+
+What the nudge did not do is make agents zoom. All three saw it, none called `look`, and two said so in their reply ("I didn't zoom into the full-size frames"). That is a better reply, since the claim is now qualified, but the behaviour is the same. If the aim is for agents to see detail, asking isn't enough: `render` would have to put a full-size frame in its own result. That costs tokens (a full 1080p frame is about a tenth of a megabyte as an image) and is the next thing to try.

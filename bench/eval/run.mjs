@@ -175,7 +175,10 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href && opt("rescore", ""
       const rs = results.filter((r) => r.task === t && r.arm === arm);
       console.log(`${t} / ${arm}: ${rs.filter((r) => r.pass).length}/${rs.length}, ${median(rs.map((r) => r.turns))} turns, $${median(rs.map((r) => r.cost))}, ${median(rs.map((r) => r.renders))} renders`);
     }
-  const file = join(here, "results", `${new Date().toISOString().slice(0, 10)}-${agentKind.replace(":", "-")}-${model}-${taskIds.join("+")}.json`);
+  // Never overwrite an earlier run's results: two runs of the same tasks on one day used to share a name.
+  const stem = `${new Date().toISOString().slice(0, 10)}-${agentKind.replace(":", "-")}-${model}-${taskIds.join("+")}-arms-${arms.join("")}`;
+  let file = join(here, "results", `${stem}.json`);
+  for (let n = 2; existsSync(file); n++) file = join(here, "results", `${stem}-${n}.json`);
   mkdirSync(join(here, "results"), { recursive: true });
   writeFileSync(file, `${JSON.stringify({ date: new Date().toISOString(), agent: agentKind, model, budget, runs, results }, null, 2)}\n`);
   console.log(`results: ${file}`);
