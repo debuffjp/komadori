@@ -1,13 +1,43 @@
 {
   "name": "komadori",
   "version": "0.0.0",
-  "description": "Steps a browser scene frame by frame, checks the frames, and writes a contact sheet, a report and an mp4.",
+  "description": "Steps a browser scene frame by frame, checks the frames, and writes a contact sheet, a report and an mp4. Made for spryte scenes, works with any canvas engine.",
   "license": "MIT",
   "type": "module",
-  "bin": { "komadori": "bin/komadori.mjs" },
-  "files": ["bin", "README.md", "LICENSE"],
-  "scripts": { "test": "node --test \"test/*.test.mjs\"" },
-  "engines": { "node": ">=20" },
-  "dependencies": { "playwright-core": "1.64.1" },
-  "repository": { "type": "git", "url": "git+https://github.com/debuffjp/komadori.git" }
+  "bin": {
+    "komadori": "bin/komadori.mjs"
+  },
+  "files": [
+    "bin",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test \"test/*.test.mjs\""
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "playwright-core": "1.64.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/debuffjp/komadori.git"
+  },
+  "keywords": [
+    "spryte",
+    "canvas",
+    "webgl",
+    "render",
+    "contact-sheet",
+    "mp4",
+    "frame-by-frame",
+    "agent",
+    "playwright"
+  ],
+  "homepage": "https://github.com/debuffjp/komadori#readme",
+  "bugs": {
+    "url": "https://github.com/debuffjp/komadori/issues"
+  }
 }

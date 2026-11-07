@@ -1,14 +1,47 @@
 # komadori
 
-コマ撮り: taking a scene one frame at a time. komadori loads a built page (or a URL), steps it with `window.__frame()`, checks the frames and writes a contact sheet, a `report.json` and, if you ask, an mp4.
+コマ撮り: taking a scene one frame at a time.
 
-It works with any canvas engine. The page only has to expose `window.__frame()`: step the scene exactly one frame and draw it, then return. Built for agents that can't watch a scene run: the contact sheet is the thing to look at.
+Made for [spryte](https://debuff.jp/spryte/), the 2D renderer that draws a million sprites in one call. komadori steps a spryte scene frame by frame in a real browser, checks every frame, and hands back a contact sheet, a `report.json` and an mp4. It's how a million-boid flock got recorded at 1080p60 on a laptop, and how spryte's showcase scenes get checked before anyone sees them.
 
 ```bash
 npx komadori dist --frames 600 --samples 20 --size 1920x1080 --out render --mp4 render/clip.mp4
 ```
 
-Using it as an agent, and how to give a page a `window.__frame()`: [docs/agent-guide.md](docs/agent-guide.md).
+## Why it exists
+
+An agent can't watch a scene run, and a person shouldn't have to scrub a recording to find a stripe. spryte scenes are heavy and they move, so komadori steps them itself: a fixed 1/60 s per frame, whatever the recording machine does, so the clip plays at the speed you meant. Then it lays out a few dozen frames on one sheet to look at.
+
+On spryte's million-boid demo, one `draw.sprites` call carries 1,000,000 boids at 72 to 80 fps live on an integrated Radeon 780M. komadori recorded that demo as a 600-frame 1920x1080 clip, and caught that its first take overflowed the frame and covered the title.
+
+## Built for agents
+
+An agent writing a spryte scene needs two things: a small API to learn, and a way to see what it drew. spryte's whole [agent cheat sheet](https://github.com/debuffjp/debuff/blob/main/packages/spryte/docs/agent-cheatsheet.md) is one 7.7 KB page, and komadori is the way to see: a contact sheet of the run, a few full-size frames, and checks that catch a blank, frozen or crashing scene before anyone looks. [docs/agent-guide.md](docs/agent-guide.md) has the loop.
+
+## With spryte
+
+Give your page a stepped mode behind a query string, and point komadori at it:
+
+```js
+import { createRenderer } from "spryte";
+
+const draw = createRenderer(canvas);
+if (new URLSearchParams(location.search).has("capture")) {
+  window.__frame = () => { step(1 / 60); render(); };
+}
+```
+
+```bash
+npx komadori dist --query "capture=1" --frames 600 --size 1920x1080
+```
+
+spryte's [million-boid demo](https://github.com/debuffjp/debuff/tree/main/packages/spryte/examples/million) and the rain and warp showcase scenes are working examples.
+
+**Rendering at 1080p.** A scene drawn at a fixed 960x540 backing size goes soft at 1080p. Make the canvas and `draw.resize` twice the size and pass `2` as the last argument of `draw.begin(clear, W, H, 2)`. If the scene draws into a render target, make the target `W * 2` by `H * 2`, call `draw.scale(2, 2)` at the top of the function you pass to `draw.into`, and draw the target's sprite back at `scaleX: 0.5, scaleY: 0.5`: a target sprite is drawn at its pixel size in logical units, so without that the frame shows only the top-left quarter at double size.
+
+## Any engine
+
+komadori doesn't use spryte's code. It drives Chrome with Playwright, and the page only has to expose `window.__frame()`: step the scene exactly one frame and draw it, then return. A Canvas 2D page, Pixi, Phaser or your own renderer all work. [docs/agent-guide.md](docs/agent-guide.md) shows how to add it to any page.
 
 ## What it checks
 
@@ -18,7 +51,7 @@ Exit code: 0 when no check failed (warnings don't count), 1 when one did, 2 when
 
 ## Options
 
-Run `npx komadori` with no arguments for the list. `--keep-frames dir` saves each sampled frame full size.
+Run `npx komadori --help` for the list. `--keep-frames dir` saves each sampled frame full size.
 
 Environment: `HIGH_GPU=1` asks for the discrete GPU on a machine with two. The first line printed names the GPU used, and warns on a software renderer. `CHROME=/path/to/chrome` picks the browser. `SOFTWARE_GL=1` forces a software renderer.
 
@@ -28,4 +61,4 @@ Node 20 or later, Chrome or Chromium, and ffmpeg with libx264 for `--mp4`.
 
 ## Origin
 
-Extracted from [spryte](https://debuff.jp/spryte/), where it recorded the million-boid demo. MIT.
+Extracted from spryte's own render tooling. MIT.
