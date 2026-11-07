@@ -1,0 +1,72 @@
+{
+  "date": "2026-11-07T09:27:08.637Z",
+  "agent": "claude",
+  "model": "sonnet",
+  "budget": "2",
+  "runs": 3,
+  "results": [
+    {
+      "task": "washed-out-title",
+      "arm": "A",
+      "run": 1,
+      "pass": false,
+      "detail": "background behind the title at its worst: p90 luma 170 (frame 48, needs 135 or less); white title pixels at least 13923 (needs 6000); bright glow area below the title up to 15954 px (needs 11000)",
+      "score": 170.4,
+      "turns": 12,
+      "cost": 0.1482,
+      "tokens": {
+        "input": 18,
+        "output": 2520,
+        "cacheRead": 377653,
+        "cacheWrite": 21299
+      },
+      "renders": 4,
+      "looks": 1,
+      "diffs": 0,
+      "seconds": 80.7,
+      "status": 0
+    },
+    {
+      "task": "washed-out-title",
+      "arm": "A",
+      "run": 2,
+      "pass": true,
+      "detail": "background behind the title at its worst: p90 luma 125 (frame 48, needs 135 or less); white title pixels at least 13930 (needs 6000); bright glow area below the title up to 15954 px (needs 11000)",
+      "score": 125.2,
+      "turns": 12,
+      "cost": 0.1591,
+      "tokens": {
+        "input": 16,
+        "output": 3781,
+        "cacheRead": 332197,
+        "cacheWrite": 22010
+      },
+      "renders": 2,
+      "looks": 0,
+      "diffs": 0,
+      "seconds": 79.9,
+      "status": 0
+    },
+    {
+      "task": "washed-out-title",
+      "arm": "A",
+      "run": 3,
+      "pass": false,
+      "detail": "background behind the title at its worst: p90 luma 162 (frame 48, needs 135 or less); white title pixels at least 13921 (needs 6000); bright glow area below the title up to 15954 px (needs 11000)",
+      "score": 162,
+      "turns": 14,
+      "cost": 0.1642,
+      "tokens": {
+        "input": 20,
+        "output": 3203,
+        "cacheRead": 427673,
+        "cacheWrite": 22350
+      },
+      "renders": 4,
+      "looks": 0,
+      "diffs": 0,
+      "seconds": 77.5,
+      "status": 0
+    }
+  ]
+}

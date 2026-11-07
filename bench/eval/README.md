@@ -40,6 +40,8 @@ More tasks go in `tasks/<id>/` with `prompt.md`, the start files, `check.mjs` (e
 
 The agents that couldn't render didn't guess a font size. They called spryte's `draw.measure` to size the title at load time (B found it in the cheat sheet, C in the API reference), so the answer was computable without looking. On this task, then, the komadori tools only added cost: arm A took about 2.7 times the turns of B and about twice the money, with the same result. Three runs per cell show a direction at best, and here the direction is that a task with a computable answer doesn't need to see. It says nothing about tasks where looking is the only way to know. The next tasks have to be ones like that: stripes, overlap, a colour that looks wrong, a draw-order or blend bug that the code doesn't make obvious.
 
+> **Correction (2026-11-07).** The `washed-out-title` tables further down were scored with a check that gave false failures, and the reading of them ("arm A does worse than B") was wrong. See "Correction: the check was wrong" at the end. They are left in so the record stays honest.
+
 ## The second task
 
 | Task | What the agent is asked | The hidden check |
@@ -93,3 +95,27 @@ Six against four runs is too few to call: the gap between A and B is not signifi
 That is 2 of 3, where the same arm without the nudge was 0 of 6. Mixing batches, one-sided Fisher p is about 0.08: suggestive, not shown. The three runs also used different fixes, so this could be variance.
 
 What the nudge did not do is make agents zoom. All three saw it, none called `look`, and two said so in their reply ("I didn't zoom into the full-size frames"). That is a better reply, since the claim is now qualified, but the behaviour is the same. If the aim is for agents to see detail, asking isn't enough: `render` would have to put a full-size frame in its own result. That costs tokens (a full 1080p frame is about a tenth of a megabyte as an image) and is the next thing to try.
+
+### Correction: the check was wrong
+
+The `washed-out-title` check took the 90th percentile of brightness over the whole title box (720 by 140 px). Bright glow near the letters therefore failed a fix that was visibly correct. I found it when the one agent that zoomed in (frame 65) said the title "reads clearly" while the check scored its scene 170: rendering that scene showed a thin dark outline around the letters and a perfectly readable title, so the agent was right and the check was wrong. A-3's dark patch (162) was readable too.
+
+The check now measures what a reader compares the letters with: the ring of background within 8 px of them (leaving out the 2 px of anti-aliased edge), and asks for 3:1 contrast against white, the WCAG minimum for large text (p90 luma 147 or less). The limit comes from that standard, not from the results. It still separates the cases: the unfixed scene scores 216 at its worst frame and fails, the reference fix scores 115 and passes. All 19 runs' scenes were rescored with it (`--rescore`, free):
+
+| Condition | Pass | Scores (lower is better; the unfixed scene is 216) |
+| --- | --- | --- |
+| A: sheet + komadori tools, no nudge (both batches) | 3/6 | 54.9, 59.1, 127.4, 175.3, 188.5, 193.6 |
+| B: sheet only | 4/4 | 39, 45.2, 50.1, 54.9 |
+| C: API reference only | 2/3 | 77, 96.2, 177.6 |
+| A + zoom nudge | 2/3 | 54.9, 88, 161.2 |
+| A + nudge + a full-size frame in `render`'s result | 3/3 | 88, 98.2, 99.2 |
+
+(The A rows with 175 to 194 are the three runs from the accidental batch; their scenes really do fail.) The raw rescore output is in `results/2026-11-07-washed-out-title-rescored-with-ring-check.txt`.
+
+What this supports, and what it doesn't:
+
+- **Blind agents did fine.** B passed 4 of 4. Every agent found the cause (the additive blend still on for the title), and writing a patch or an outline behind the title without looking usually works. The task is closer to easy than to "only looking works", which is what I built it to be.
+- **The tools did not clearly help, and did not clearly hurt.** A without the nudge was 3 of 6 against B's 4 of 4, and the three A runs that failed were the accidental batch. With three to six runs a cell, none of these gaps is significant (for the last row against the no-nudge arm, p is about 0.24).
+- **The full-size frame is consistent with helping (3 of 3), and no more than that.** One of those three runs called `look`. The other two used only what `render` returned, which is the point of putting the frame there. Costs went up a little: $0.47 for the three runs against $0.40.
+
+So a harder task is still needed, one where the answer cannot be written without seeing it. This one was not.

@@ -1,0 +1,23 @@
+== batch1-work2
+washed-out-title-A-1: PASS score 54.9
+washed-out-title-A-2: PASS score 127.4
+washed-out-title-A-3: PASS score 59.1
+washed-out-title-B-1: PASS score 45.2
+washed-out-title-B-2: PASS score 39
+washed-out-title-B-3: PASS score 54.9
+washed-out-title-C-1: FAIL score 177.6
+washed-out-title-C-2: PASS score 77
+washed-out-title-C-3: PASS score 96.2
+== batch1-extra
+washed-out-title-A-1: FAIL score 175.3
+washed-out-title-A-2: FAIL score 188.5
+washed-out-title-A-3: FAIL score 193.6
+washed-out-title-B-1: PASS score 50.1
+== nudge
+washed-out-title-A-1: PASS score 88
+washed-out-title-A-2: FAIL score 161.2
+washed-out-title-A-3: PASS score 54.9
+== nudge+fullframe
+washed-out-title-A-1: PASS score 98.2
+washed-out-title-A-2: PASS score 88
+washed-out-title-A-3: PASS score 99.2

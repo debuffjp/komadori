@@ -194,3 +194,58 @@ export async function lumaStats(png, region, { exclude, tol = 60, over = 200 } =
     ),
   );
 }
+
+/**
+ * Brightness in a ring just around some shape: the pixels within `outer` px of the pixels near `color` (a white
+ * title, say), leaving out the shape itself and the `inner` px next to it, where anti-aliasing blurs the edge.
+ * This is the background a reader's eye compares the letters with, so it measures contrast where it matters.
+ * @returns {Promise<{ p90: number, mean: number, count: number }>}
+ */
+export async function ringLuma(png, region, { color = [255, 255, 255], tol = 60, inner = 2, outer = 8 } = {}) {
+  return withPage((page) =>
+    page.evaluate(
+      async ({ png, region, color, tol, inner, outer }) => {
+        const bmp = await createImageBitmap(new Blob([Uint8Array.from(atob(png), (c) => c.charCodeAt(0))], { type: "image/png" }));
+        const cv = new OffscreenCanvas(bmp.width, bmp.height);
+        const cx = cv.getContext("2d", { willReadFrequently: true });
+        cx.drawImage(bmp, 0, 0);
+        const { w, h } = region;
+        const d = cx.getImageData(region.x, region.y, w, h).data;
+        const mask = new Uint8Array(w * h);
+        for (let i = 0; i < w * h; i++) {
+          const p = i * 4;
+          if (Math.abs(d[p] - color[0]) + Math.abs(d[p + 1] - color[1]) + Math.abs(d[p + 2] - color[2]) <= tol) mask[i] = 1;
+        }
+        // Grow the shape by r pixels (a square window, in two passes).
+        const grow = (src, r) => {
+          const a = new Uint8Array(w * h);
+          for (let y = 0; y < h; y++)
+            for (let x = 0; x < w; x++) {
+              if (!src[y * w + x]) continue;
+              for (let k = Math.max(0, x - r); k <= Math.min(w - 1, x + r); k++) a[y * w + k] = 1;
+            }
+          const b = new Uint8Array(w * h);
+          for (let y = 0; y < h; y++)
+            for (let x = 0; x < w; x++) {
+              if (!a[y * w + x]) continue;
+              for (let k = Math.max(0, y - r); k <= Math.min(h - 1, y + r); k++) b[k * w + x] = 1;
+            }
+          return b;
+        };
+        const near = grow(mask, inner);
+        const far = grow(mask, outer);
+        const lumas = [];
+        for (let i = 0; i < w * h; i++) {
+          if (far[i] && !near[i]) {
+            const p = i * 4;
+            lumas.push(0.2126 * d[p] + 0.7152 * d[p + 1] + 0.0722 * d[p + 2]);
+          }
+        }
+        lumas.sort((a, b) => a - b);
+        const mean = lumas.reduce((s, v) => s + v, 0) / Math.max(lumas.length, 1);
+        return { p90: lumas[Math.min(lumas.length - 1, Math.floor(lumas.length * 0.9))] ?? 0, mean, count: lumas.length };
+      },
+      { png, region, color, tol, inner, outer },
+    ),
+  );
+}
