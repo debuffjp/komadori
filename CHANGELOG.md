@@ -5,7 +5,7 @@
 The README's MCP config was wrong. It said `npx -y komadori-mcp`, but `komadori-mcp` is a command inside the `komadori` package, not a package of its own, so that line returned a 404.
 
 - The MCP server is now a subcommand, `komadori mcp`, so the config is `npx -y komadori mcp`.
-- The `komadori-mcp` command still works. A small `komadori-mcp` package on npm runs it, so `npx -y komadori-mcp` works too, and the name is taken.
+- The `komadori-mcp` command still works, as a command inside the `komadori` package. There is no separate `komadori-mcp` package on npm, so `npx -y komadori-mcp` does not work. Use `npx -y komadori mcp`.
 - The README is shorter. The detail moved to `docs/golden-frames.md` and `docs/spryte.md`.
 
 ## 0.1.0
