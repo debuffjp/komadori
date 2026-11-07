@@ -44,6 +44,7 @@ describe("komadori-mcp", () => {
     assert.notEqual(r.isError, true, textOf(r));
     assert.match(textOf(r), /No check failed/);
     assert.match(textOf(r), /GPU renderer: /);
+    assert.match(textOf(r), /384 px wide.*call look/s, "the result should tell the agent to zoom before judging detail");
     assert.equal(images(r).length, 1);
     assert.equal(images(r)[0].mimeType, "image/png");
     assert.ok(images(r)[0].data.length > 1000);

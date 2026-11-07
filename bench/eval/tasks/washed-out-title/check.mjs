@@ -26,6 +26,8 @@ export default async function check({ dir, render, lumaStats, findColor }) {
   const glowKept = peakGlow >= 11000;
   return {
     pass: readable && titleKept && glowKept,
+    // The cut is 135; the score is the worst p90 itself, so a near miss (138) ranks above a clear failure (172).
+    score: Number(worst.toFixed(1)),
     detail: `background behind the title at its worst: p90 luma ${worst.toFixed(0)} (frame ${worstFrame}, needs 135 or less); white title pixels at least ${minTitle} (needs 6000); bright glow area below the title up to ${peakGlow} px (needs 11000)`,
   };
 }

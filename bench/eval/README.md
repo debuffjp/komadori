@@ -62,3 +62,20 @@ Two things worth acting on, though:
 
 - **Arm A rendered 2 to 4 times and never called `look` or `diff`.** It judged readability from the contact sheet, which shows each frame 384 px wide. A-1 reported the title "stays readable the whole way round" at p90 139, and A-2 said the same at 172, barely better than the unfixed scene's 180. The contact sheet is too small to judge text contrast, and the agents didn't know to zoom. The `render` result should say so.
 - **The check is borderline for plausible fixes.** A softer threshold or a second measure (the lowest contrast on any letter) would make the task say more about the arms. A pass or fail from a hard cut is a poor way to rank fixes that are all the same idea.
+
+### More data, and a mistake
+
+While adding a rescore command I ran the runner with a flag it didn't know. It ignored the flag and did its default, real agent runs, and completed 13 of them (9 `cut-off-title`, 4 `washed-out-title`, $1.46) before I stopped it. That was an unapproved spend. The runner now refuses unknown options and has no default for `--agent`. The scenes those runs left behind were rescored for free, so the money isn't wasted:
+
+- `cut-off-title`: 9/9 passed again, so the ceiling replicates.
+- `washed-out-title`: arm A scored 173.2, 173.4 and 173.4 (the unfixed scene is 180, lower is better), arm B's one extra run passed at 129.9.
+
+With the first batch scored the same way (`--rescore`), `washed-out-title` stands at:
+
+| Arm | Pass | Scores (lower is better; the unfixed scene is 180) |
+| --- | --- | --- |
+| A: sheet + komadori tools | 0/6 | 138.8, 172.4, 160.5, 173.2, 173.4, 173.4 |
+| B: sheet only | 2/4 | 170.4, 121.3, 138.4, 129.9 |
+| C: API reference only | 0/3 | 173.2, 154.7, 161.5 |
+
+Six against four runs is too few to call: the gap between A and B is not significant, and the unplanned runs were not a designed sample. But the direction is the opposite of what the tools should do, and the transcripts suggest why. Arm A looked at the contact sheet, saw the title "readable", and stopped at a weak patch. Arm B couldn't look, so it was unsure and drew a bolder one. If that is right, a coarse view gave false confidence, which is what the contact sheet's 384 px frames invite. `render` now tells the agent to `look` before judging text. Whether that changes the result is the next run, and it hasn't been done.

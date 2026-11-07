@@ -81,7 +81,10 @@ export function createMcp({ version }) {
         renders.length = Math.min(renders.length, 2);
       }
       const head = result.code === 2 ? "The render could not run." : result.code === 1 ? "A check failed." : "No check failed.";
-      const content = [text(`${head}\n${lines.join("\n")}`)];
+      // The sheet shows each frame 384 px wide: too small to judge text, contrast or fine detail. Say so, because agents
+      // that only had the sheet called a barely changed scene readable.
+      const nudge = result.sheet ? "\nThe sheet shows frames at 384 px wide. Before you say text is readable or detail is right, call look on a frame (zoom into the region)." : "";
+      const content = [text(`${head}\n${lines.join("\n")}${nudge}`)];
       if (result.sheet) content.push(image(result.sheet));
       return { isError: result.code === 2, content };
     } catch (e) {
