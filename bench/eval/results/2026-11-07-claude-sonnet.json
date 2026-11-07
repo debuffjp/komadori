@@ -1,0 +1,189 @@
+{
+  "date": "2026-11-07T08:11:47.438Z",
+  "agent": "claude",
+  "model": "sonnet",
+  "budget": "2",
+  "runs": 3,
+  "results": [
+    {
+      "task": "cut-off-title",
+      "arm": "A",
+      "run": 1,
+      "pass": true,
+      "detail": "title spans x 35..922: 35px left, 38px right, 97% of the room",
+      "turns": 15,
+      "cost": 0.1507,
+      "tokens": {
+        "input": 26,
+        "output": 2131,
+        "cacheRead": 547337,
+        "cacheWrite": 18639
+      },
+      "renders": 4,
+      "looks": 2,
+      "diffs": 0,
+      "seconds": 42.1,
+      "status": 0
+    },
+    {
+      "task": "cut-off-title",
+      "arm": "A",
+      "run": 2,
+      "pass": true,
+      "detail": "title spans x 37..920: 37px left, 40px right, 97% of the room",
+      "turns": 17,
+      "cost": 0.1657,
+      "tokens": {
+        "input": 30,
+        "output": 2476,
+        "cacheRead": 638902,
+        "cacheWrite": 19258
+      },
+      "renders": 5,
+      "looks": 2,
+      "diffs": 0,
+      "seconds": 41.8,
+      "status": 0
+    },
+    {
+      "task": "cut-off-title",
+      "arm": "A",
+      "run": 3,
+      "pass": true,
+      "detail": "title spans x 37..920: 37px left, 40px right, 97% of the room",
+      "turns": 16,
+      "cost": 0.1611,
+      "tokens": {
+        "input": 26,
+        "output": 2347,
+        "cacheRead": 550324,
+        "cacheWrite": 20630
+      },
+      "renders": 4,
+      "looks": 2,
+      "diffs": 0,
+      "seconds": 46.3,
+      "status": 0
+    },
+    {
+      "task": "cut-off-title",
+      "arm": "B",
+      "run": 1,
+      "pass": true,
+      "detail": "title spans x 35..922: 35px left, 38px right, 97% of the room",
+      "turns": 6,
+      "cost": 0.0826,
+      "tokens": {
+        "input": 10,
+        "output": 1187,
+        "cacheRead": 191799,
+        "cacheWrite": 12883
+      },
+      "renders": 0,
+      "looks": 0,
+      "diffs": 0,
+      "seconds": 19.6,
+      "status": 0
+    },
+    {
+      "task": "cut-off-title",
+      "arm": "B",
+      "run": 2,
+      "pass": true,
+      "detail": "title spans x 35..922: 35px left, 38px right, 97% of the room",
+      "turns": 6,
+      "cost": 0.0842,
+      "tokens": {
+        "input": 12,
+        "output": 1048,
+        "cacheRead": 232152,
+        "cacheWrite": 12612
+      },
+      "renders": 0,
+      "looks": 0,
+      "diffs": 0,
+      "seconds": 22.9,
+      "status": 0
+    },
+    {
+      "task": "cut-off-title",
+      "arm": "B",
+      "run": 3,
+      "pass": true,
+      "detail": "title spans x 25..932: 25px left, 28px right, 99% of the room",
+      "turns": 7,
+      "cost": 0.0899,
+      "tokens": {
+        "input": 12,
+        "output": 1427,
+        "cacheRead": 232148,
+        "cacheWrite": 13107
+      },
+      "renders": 0,
+      "looks": 0,
+      "diffs": 0,
+      "seconds": 23.1,
+      "status": 0
+    },
+    {
+      "task": "cut-off-title",
+      "arm": "C",
+      "run": 1,
+      "pass": true,
+      "detail": "title spans x 37..920: 37px left, 40px right, 97% of the room",
+      "turns": 8,
+      "cost": 0.1235,
+      "tokens": {
+        "input": 10,
+        "output": 1564,
+        "cacheRead": 212787,
+        "cacheWrite": 21651
+      },
+      "renders": 0,
+      "looks": 0,
+      "diffs": 0,
+      "seconds": 21.7,
+      "status": 0
+    },
+    {
+      "task": "cut-off-title",
+      "arm": "C",
+      "run": 2,
+      "pass": true,
+      "detail": "title spans x 35..922: 35px left, 38px right, 97% of the room",
+      "turns": 5,
+      "cost": 0.0991,
+      "tokens": {
+        "input": 6,
+        "output": 1323,
+        "cacheRead": 113158,
+        "cacheWrite": 18646
+      },
+      "renders": 0,
+      "looks": 0,
+      "diffs": 0,
+      "seconds": 20.7,
+      "status": 0
+    },
+    {
+      "task": "cut-off-title",
+      "arm": "C",
+      "run": 3,
+      "pass": true,
+      "detail": "title spans x 35..922: 35px left, 38px right, 97% of the room",
+      "turns": 6,
+      "cost": 0.1039,
+      "tokens": {
+        "input": 8,
+        "output": 1307,
+        "cacheRead": 160160,
+        "cacheWrite": 18707
+      },
+      "renders": 0,
+      "looks": 0,
+      "diffs": 0,
+      "seconds": 19,
+      "status": 0
+    }
+  ]
+}

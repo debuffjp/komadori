@@ -27,3 +27,15 @@ More tasks go in `tasks/<id>/` with `prompt.md`, the start files, `check.mjs` (e
 ## Reading the results
 
 `results/<date>-<agent>-<model>.json` has every run. The table the runner prints gives, per task and arm, how many passed and the median turns, cost and renders. With three runs per cell this shows a direction, not a proof: report it as that, with the model and date.
+
+## Results
+
+**2026-11-07, sonnet, `cut-off-title`, 3 runs per arm (9 runs, $1.06 in all, about 4 minutes).** Every run passed the hidden check, in every arm. So this task does not separate the arms: it hit a ceiling.
+
+| Arm | Passed | Median turns | Median cost | Median renders |
+| --- | --- | --- | --- | --- |
+| A: sheet + komadori tools | 3/3 | 16 | $0.161 | 4 |
+| B: sheet only | 3/3 | 6 | $0.084 | 0 |
+| C: API reference only | 3/3 | 6 | $0.104 | 0 |
+
+The agents that couldn't render didn't guess a font size. They called spryte's `draw.measure` to size the title at load time (B found it in the cheat sheet, C in the API reference), so the answer was computable without looking. On this task, then, the komadori tools only added cost: arm A took about 2.7 times the turns of B and about twice the money, with the same result. Three runs per cell show a direction at best, and here the direction is that a task with a computable answer doesn't need to see. It says nothing about tasks where looking is the only way to know. The next tasks have to be ones like that: stripes, overlap, a colour that looks wrong, a draw-order or blend bug that the code doesn't make obvious.
