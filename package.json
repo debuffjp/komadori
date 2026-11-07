@@ -1,0 +1,12 @@
+{
+  "name": "komadori",
+  "version": "0.0.0",
+  "description": "Steps a browser scene frame by frame, checks the frames, and writes a contact sheet, a report and an mp4.",
+  "license": "MIT",
+  "type": "module",
+  "bin": { "komadori": "bin/komadori.mjs" },
+  "files": ["bin", "README.md"],
+  "engines": { "node": ">=20" },
+  "dependencies": { "playwright-core": "1.64.1" },
+  "repository": { "type": "git", "url": "git+https://github.com/debuffjp/komadori.git" }
+}
