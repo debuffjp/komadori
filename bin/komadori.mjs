@@ -23,13 +23,40 @@ import { dirname, extname, join, resolve } from "node:path";
 import { chromium } from "playwright-core";
 
 const args = process.argv.slice(2);
+const USAGE = `usage: komadori <dist-dir | url> [options]
+  --frames n       frames to step (default 120)
+  --size WxH       viewport (default 1280x720)
+  --samples n      frames kept for the checks and the contact sheet (default 20)
+  --out dir        folder for contact-sheet.png and report.json (default ./render-out)
+  --keep-frames d  also write each sampled frame to folder d as a full-size PNG
+  --mp4 file       also encode every frame (needs ffmpeg with libx264 on PATH)
+  --fps n          the clip's frame rate (default 60)
+  --query q        appended to the page URL
+  --help, --version
+Environment: HIGH_GPU=1, CHROME=/path/to/chrome, SOFTWARE_GL=1`;
+if (args.includes("--help") || args.includes("-h")) {
+  console.log(USAGE);
+  process.exit(0);
+}
+if (args.includes("--version")) {
+  const pkg = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
+  console.log(pkg.version);
+  process.exit(0);
+}
+const KNOWN = new Set(["frames", "size", "samples", "out", "keep-frames", "mp4", "fps", "query"]);
+const unknown = args.find((a) => a.startsWith("--") && !KNOWN.has(a.slice(2)));
+if (unknown) {
+  console.error(`Unknown option ${unknown}.
+${USAGE}`);
+  process.exit(2);
+}
 const target = args.find((a, i) => !a.startsWith("--") && !args[i - 1]?.startsWith("--"));
 const opt = (name, fallback) => {
   const i = args.indexOf(`--${name}`);
   return i >= 0 && args[i + 1] !== undefined ? args[i + 1] : fallback;
 };
 if (!target) {
-  console.error("usage: komadori <dist-dir | url> [--frames n] [--size WxH] [--samples n] [--out dir] [--mp4 file] [--query q]");
+  console.error(USAGE);
   process.exit(2);
 }
 const frames = Number(opt("frames", 120));
