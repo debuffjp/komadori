@@ -14,6 +14,7 @@ import { join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { findColor, lumaStats } from "../../src/image.mjs";
 import { render } from "../../src/render.mjs";
+import { parseTranscript } from "./transcript.mjs";
 
 const here = fileURLToPath(new URL(".", import.meta.url));
 const root = resolve(here, "../..");
@@ -22,8 +23,15 @@ const opt = (name, fallback) => {
   const i = args.indexOf(`--${name}`);
   return i >= 0 && args[i + 1] !== undefined ? args[i + 1] : fallback;
 };
+const KNOWN = new Set(["spryte", "tasks", "arms", "runs", "model", "budget", "timeout", "agent", "work", "rescore"]);
+const unknown = args.find((a) => a.startsWith("--") && !KNOWN.has(a.slice(2)));
+if (unknown) {
+  console.error(`Unknown option ${unknown}. Nothing was run.`);
+  process.exit(2);
+}
 const spryte = opt("spryte", process.env.SPRYTE_CHECKOUT);
-const agentKind = opt("agent", "claude");
+// No default: the default used to be claude, which spends money, and a mistyped command ran 13 agent runs.
+const agentKind = opt("agent", opt("rescore", "") ? "none" : "");
 const model = opt("model", "sonnet");
 const budget = opt("budget", "2");
 const timeoutMs = Number(opt("timeout", 15)) * 60_000;
@@ -35,8 +43,8 @@ if (!spryte || !existsSync(join(spryte, "packages/spryte/dist/index.js"))) {
   console.error("--spryte must point at a debuff checkout with packages/spryte built (npm run build -w spryte).");
   process.exit(2);
 }
-if (!["claude", "fake:solve", "fake:noop"].includes(agentKind)) {
-  console.error("--agent must be claude, fake:solve or fake:noop");
+if (!["claude", "fake:solve", "fake:noop", "none"].includes(agentKind)) {
+  console.error("--agent is required and must be claude (spends money), fake:solve or fake:noop. Nothing was run.");
   process.exit(2);
 }
 const win = process.platform === "win32";
@@ -94,28 +102,6 @@ function claude(runDir, prompt, arm) {
   });
 }
 
-/** Tokens, turns, cost and tool use out of a stream-json transcript. */
-export function parseTranscript(text) {
-  const out = { turns: 0, cost: 0, tokens: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }, tools: {}, final: "" };
-  for (const line of text.split("\n")) {
-    let e;
-    try {
-      e = JSON.parse(line);
-    } catch {
-      continue;
-    }
-    if (e.type === "assistant") for (const c of e.message?.content ?? []) if (c.type === "tool_use") out.tools[c.name] = (out.tools[c.name] ?? 0) + 1;
-    if (e.type === "result") {
-      out.turns = e.num_turns ?? 0;
-      out.cost = e.total_cost_usd ?? 0;
-      out.final = e.result ?? "";
-      const u = e.usage ?? {};
-      out.tokens = { input: u.input_tokens ?? 0, output: u.output_tokens ?? 0, cacheRead: u.cache_read_input_tokens ?? 0, cacheWrite: u.cache_creation_input_tokens ?? 0 };
-    }
-  }
-  return out;
-}
-
 async function one(taskId, arm, n) {
   const taskDir = join(here, "tasks", taskId);
   const task = await import(pathToFileURL(join(taskDir, "check.mjs")));
@@ -147,6 +133,7 @@ async function one(taskId, arm, n) {
     run: n,
     pass: verdict.pass,
     detail: verdict.detail,
+    score: verdict.score,
     turns: seen.turns,
     cost: Number(seen.cost.toFixed(4)),
     tokens: seen.tokens,
@@ -158,7 +145,20 @@ async function one(taskId, arm, n) {
   };
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+/** Score the scenes an earlier run left in a work folder again. Runs no agent and costs nothing. */
+async function rescore(folder) {
+  for (const name of readdirSync(folder).sort()) {
+    const m = /^(.+)-([ABC])-(\d+)$/.exec(name);
+    if (!m || !existsSync(join(here, "tasks", m[1], "check.mjs"))) continue;
+    const task = await import(pathToFileURL(join(here, "tasks", m[1], "check.mjs")));
+    const v = await task.default({ dir: join(folder, name), render, findColor, lumaStats });
+    console.log(`${name}: ${v.pass ? "PASS" : "FAIL"}${v.score === undefined ? "" : ` score ${v.score}`}`);
+  }
+}
+
+if (import.meta.url === pathToFileURL(process.argv[1]).href && opt("rescore", "")) {
+  await rescore(resolve(opt("rescore", "")));
+} else if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   mkdirSync(work, { recursive: true });
   const results = [];
   for (const t of taskIds)

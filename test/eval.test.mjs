@@ -8,7 +8,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, describe, test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { parseTranscript } from "../bench/eval/run.mjs";
+import { parseTranscript } from "../bench/eval/transcript.mjs";
 
 const runner = fileURLToPath(new URL("../bench/eval/run.mjs", import.meta.url));
 const spryte = process.env.SPRYTE_CHECKOUT;
@@ -59,6 +59,15 @@ describe("eval harness", () => {
       assert.match(r.stdout, new RegExp(`${task} arm B run 1: PASS`));
     });
   }
+
+  test("runs nothing, and spends nothing, when --agent is missing or an option is unknown", () => {
+    const noAgent = spawnSync(process.execPath, [runner, "--spryte", spryte ?? scratch], { encoding: "utf8" });
+    assert.equal(noAgent.status, 2);
+    assert.match(noAgent.stderr, /--agent is required/);
+    const typo = spawnSync(process.execPath, [runner, "--agent", "fake:noop", "--rescor", scratch], { encoding: "utf8" });
+    assert.equal(typo.status, 2);
+    assert.match(typo.stderr, /Unknown option --rescor/);
+  });
 
   test("refuses to run without a spryte checkout", () => {
     const r = spawnSync(process.execPath, [runner, "--spryte", join(scratch, "nowhere"), "--agent", "fake:noop"], { encoding: "utf8" });
