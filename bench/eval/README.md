@@ -46,4 +46,19 @@ The agents that couldn't render didn't guess a font size. They called spryte's `
 | --- | --- | --- |
 | `washed-out-title` | A bright light drifts behind a white title and washes it out for part of the loop: make the title readable, don't change how it looks, and keep the light as bright and as roaming as it is | Render a full 240-frame loop and look at 16 frames: the background around the letters stays dark enough (90th percentile of luma, 135 or less, about 3.6:1 contrast), the white title is intact, and the light still lights up a large area below it (about 70% of the original's 16,000 pixels) |
 
-The answer isn't in the code in a form you can read off. The light's path is a loop built from sines, so when and where it crosses the title takes either a hand simulation or a look: in the unfixed scene frames 48 to 112 are bad and the rest are fine. The reference fix moves the loop down 90 px and passes at 119, so it clears the 135 limit with a margin of 16. Dimming the light or putting a dark plate behind the title is ruled out by the prompt and the check.
+The answer isn't in the code in a form you can read off. The light's path is a loop built from sines, so when and where it crosses the title takes either a hand simulation or a look: in the unfixed scene frames 48 to 112 are bad and the rest are fine. The reference fix moves the loop down 90 px and passes at 119, so it clears the 135 limit with a margin of 16. Dimming the light is ruled out by the check (the light must stay as bright). A dark patch behind the title is not ruled out: the prompt says to keep the title as it is, and the check only measures the outcome, so a patch dark enough passes.
+
+**2026-11-07, sonnet, `washed-out-title`, 3 runs per arm (9 runs, $0.92 in all).**
+
+| Arm | Passed | Median turns | Median cost | Median renders | Looks, diffs |
+| --- | --- | --- | --- | --- | --- |
+| A: sheet + komadori tools | 0/3 | 9 | $0.120 | 2 | 0, 0 |
+| B: sheet only | 1/3 | 6 | $0.090 | 0 | |
+| C: API reference only | 0/3 | 8 | $0.095 | 0 | |
+
+What happened, from the transcripts: every agent in every arm found the real cause (the additive blend from the light was still on when the title was drawn) and fixed it the same way: back to normal blending, plus a soft dark patch behind the title. The runs differ in how dark and wide the patch is, and the check's limit (p90 luma 135 or less) falls in the middle of that spread: failures were at 138, 139, 155, 161, 162, 170, 172 and 173, the one pass at 121. So the outcome depends on a threshold and on how bold the patch was, not on which arm the agent was in. Three runs can't separate the arms here, and nothing in this table says the cheat sheet or the tools help or hurt.
+
+Two things worth acting on, though:
+
+- **Arm A rendered 2 to 4 times and never called `look` or `diff`.** It judged readability from the contact sheet, which shows each frame 384 px wide. A-1 reported the title "stays readable the whole way round" at p90 139, and A-2 said the same at 172, barely better than the unfixed scene's 180. The contact sheet is too small to judge text contrast, and the agents didn't know to zoom. The `render` result should say so.
+- **The check is borderline for plausible fixes.** A softer threshold or a second measure (the lowest contrast on any letter) would make the task say more about the arms. A pass or fail from a hard cut is a poor way to rank fixes that are all the same idea.

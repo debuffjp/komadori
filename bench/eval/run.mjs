@@ -175,7 +175,7 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
       const rs = results.filter((r) => r.task === t && r.arm === arm);
       console.log(`${t} / ${arm}: ${rs.filter((r) => r.pass).length}/${rs.length}, ${median(rs.map((r) => r.turns))} turns, $${median(rs.map((r) => r.cost))}, ${median(rs.map((r) => r.renders))} renders`);
     }
-  const file = join(here, "results", `${new Date().toISOString().slice(0, 10)}-${agentKind.replace(":", "-")}-${model}.json`);
+  const file = join(here, "results", `${new Date().toISOString().slice(0, 10)}-${agentKind.replace(":", "-")}-${model}-${taskIds.join("+")}.json`);
   mkdirSync(join(here, "results"), { recursive: true });
   writeFileSync(file, `${JSON.stringify({ date: new Date().toISOString(), agent: agentKind, model, budget, runs, results }, null, 2)}\n`);
   console.log(`results: ${file}`);
