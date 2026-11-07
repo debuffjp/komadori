@@ -32,6 +32,7 @@ const USAGE = `usage: komadori <dist-dir | url> [options]
   --mp4 file       also encode every frame (needs ffmpeg with libx264 on PATH)
   --fps n          the clip's frame rate (default 60)
   --query q        appended to the page URL
+  --wait ms        how long to wait for window.__frame to appear (default 30000)
   --help, --version
 Environment: HIGH_GPU=1, CHROME=/path/to/chrome, SOFTWARE_GL=1`;
 if (args.includes("--help") || args.includes("-h")) {
@@ -43,7 +44,7 @@ if (args.includes("--version")) {
   console.log(pkg.version);
   process.exit(0);
 }
-const KNOWN = new Set(["frames", "size", "samples", "out", "keep-frames", "mp4", "fps", "query"]);
+const KNOWN = new Set(["frames", "size", "samples", "out", "keep-frames", "mp4", "fps", "query", "wait"]);
 const unknown = args.find((a) => a.startsWith("--") && !KNOWN.has(a.slice(2)));
 if (unknown) {
   console.error(`Unknown option ${unknown}.
@@ -67,8 +68,9 @@ const out = resolve(opt("out", "render-out"));
 const mp4 = opt("mp4", "");
 const keepFrames = opt("keep-frames", "");
 const query = opt("query", "");
-if (![frames, samples, width, height, fps].every((n) => Number.isInteger(n) && n > 0)) {
-  console.error("--frames, --samples, --size and --fps must be whole numbers above zero");
+const waitMs = Number(opt("wait", 30000));
+if (![frames, samples, width, height, fps, waitMs].every((n) => Number.isInteger(n) && n > 0)) {
+  console.error("--frames, --samples, --size, --fps and --wait must be whole numbers above zero");
   process.exit(2);
 }
 if (mp4 && spawnSync("ffmpeg", ["-version"]).error) {
@@ -144,7 +146,7 @@ console.log(`GPU renderer: ${renderer}`);
 
 await page.goto(url);
 try {
-  await page.waitForFunction(() => typeof window.__frame === "function", null, { timeout: 30_000 });
+  await page.waitForFunction(() => typeof window.__frame === "function", null, { timeout: waitMs });
 } catch {
   console.error(`The page at ${url} never exposed window.__frame(). Add it: step the scene one frame and draw.`);
   if (errors.length) console.error(errors.join("\n"));
@@ -185,8 +187,16 @@ if (mp4) {
 const keep = new Set(Array.from({ length: samples }, (_, i) => Math.round((i * (frames - 1)) / Math.max(samples - 1, 1))));
 const shots = [];
 const t0 = Date.now();
+let stepped = 0;
 for (let i = 0; i < frames; i++) {
-  await page.evaluate(() => window.__frame());
+  try {
+    await page.evaluate(() => window.__frame());
+  } catch (e) {
+    // A scene that throws is a finding, not a crash of this tool: keep the frames so far and report it.
+    errors.push(`window.__frame() threw at frame ${i}: ${String(e.message).split("\n")[0]}`);
+    break;
+  }
+  stepped++;
   if (keep.has(i)) shots.push({ i, png: (await page.screenshot({ type: "png" })).toString("base64") });
   if (ff) {
     const jpg = await page.screenshot({ type: "jpeg", quality: 95 });
@@ -197,6 +207,17 @@ const seconds = (Date.now() - t0) / 1000;
 if (ff) {
   ff.stdin.end();
   if (await ffClosed) errors.push("ffmpeg failed: the clip is incomplete");
+}
+
+if (!shots.length) {
+  // Nothing to look at: the scene threw before the first sampled frame.
+  await mkdir(out, { recursive: true });
+  const failures = [...new Set(errors)];
+  await writeFile(join(out, "report.json"), `${JSON.stringify({ url, renderer, size: `${width}x${height}`, frames, sampled: [], failures, warnings: [], errors: failures }, null, 2)}
+`);
+  for (const f of failures) console.log(`FAIL: ${f}`);
+  console.log("FAIL: no frame was captured");
+  await finish(1);
 }
 
 // Analyse in a blank page, so the scene's own page isn't slowed or changed by it.
@@ -336,17 +357,17 @@ const report = {
   url,
   renderer,
   size: `${width}x${height}`,
-  frames,
+  frames: stepped,
   sampled: shots.map((s) => s.i),
   seconds: Number(seconds.toFixed(1)),
-  framesPerSecond: Number((frames / seconds).toFixed(1)),
+  framesPerSecond: Number((stepped / seconds).toFixed(1)),
   meanFrameDifference: Number(avgDiff.toFixed(2)),
   failures: fails,
   warnings: warns,
   errors: [...new Set(errors)],
 };
 await writeFile(join(out, "report.json"), `${JSON.stringify(report, null, 2)}\n`);
-console.log(`stepped ${frames} frames in ${seconds.toFixed(1)} s (${report.framesPerSecond}/s, includes capture); sampled ${shots.length}`);
+console.log(`stepped ${stepped} frames in ${seconds.toFixed(1)} s (${report.framesPerSecond}/s, includes capture); sampled ${shots.length}`);
 for (const w of warns) console.log(`warn: ${w}`);
 for (const f of fails) console.log(`FAIL: ${f}`);
 console.log(`contact sheet: ${join(out, "contact-sheet.png")}\nreport: ${join(out, "report.json")}`);
