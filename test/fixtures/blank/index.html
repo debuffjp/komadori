@@ -1,0 +1,9 @@
+<!doctype html>
+<meta charset="utf-8" />
+<style>html,body{margin:0;background:#101418}canvas{display:block}</style>
+<canvas id="c" width="640" height="360"></canvas>
+<script>
+const c = document.getElementById("c").getContext("2d");
+let n = 0;
+window.__frame = () => { n++; c.fillStyle = "#101418"; c.fillRect(0, 0, 640, 360); };
+</script>
