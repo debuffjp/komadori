@@ -122,3 +122,42 @@ export async function compare(before, after) {
     return r;
   });
 }
+
+/**
+ * Where a colour appears in a frame: how many pixels are within `tol` (sum of channel differences) of `rgb`, and
+ * the smallest rectangle holding them. For a check that something is drawn, visible and not cut off.
+ * @returns {Promise<{ count: number, box: {x:number,y:number,w:number,h:number}|null, width: number, height: number }>}
+ */
+export async function findColor(png, rgb, tol = 60, region) {
+  return withPage((page) =>
+    page.evaluate(
+      async ({ png, rgb, tol, region }) => {
+        const bmp = await createImageBitmap(new Blob([Uint8Array.from(atob(png), (c) => c.charCodeAt(0))], { type: "image/png" }));
+        const cv = new OffscreenCanvas(bmp.width, bmp.height);
+        const cx = cv.getContext("2d", { willReadFrequently: true });
+        cx.drawImage(bmp, 0, 0);
+        const d = cx.getImageData(0, 0, bmp.width, bmp.height).data;
+        const y0r = region?.y ?? 0;
+        const y1r = region ? region.y + region.h : bmp.height;
+        let x0 = bmp.width;
+        let y0 = bmp.height;
+        let x1 = -1;
+        let y1 = -1;
+        let count = 0;
+        for (let y = y0r; y < y1r; y++)
+          for (let x = 0; x < bmp.width; x++) {
+            const p = (y * bmp.width + x) * 4;
+            if (Math.abs(d[p] - rgb[0]) + Math.abs(d[p + 1] - rgb[1]) + Math.abs(d[p + 2] - rgb[2]) <= tol) {
+              count++;
+              if (x < x0) x0 = x;
+              if (x > x1) x1 = x;
+              if (y < y0) y0 = y;
+              if (y > y1) y1 = y;
+            }
+          }
+        return { count, box: count ? { x: x0, y: y0, w: x1 - x0 + 1, h: y1 - y0 + 1 } : null, width: bmp.width, height: bmp.height };
+      },
+      { png, rgb, tol, region },
+    ),
+  );
+}
