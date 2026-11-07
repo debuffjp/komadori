@@ -83,9 +83,15 @@ export function createMcp({ version }) {
       const head = result.code === 2 ? "The render could not run." : result.code === 1 ? "A check failed." : "No check failed.";
       // The sheet shows each frame 384 px wide: too small to judge text, contrast or fine detail. Say so, because agents
       // that only had the sheet called a barely changed scene readable.
-      const nudge = result.sheet ? "\nThe sheet shows frames at 384 px wide. Before you say text is readable or detail is right, call look on a frame (zoom into the region)." : "";
+      // So the agent sees real detail without having to ask for it, one frame comes back at full size too: the sampled
+      // frame most unlike the others, which is the one most likely to hold a problem.
+      const featured = result.shots?.find((s) => s.i === result.report?.featuredFrame);
+      const nudge = result.sheet
+        ? `\nThe sheet shows frames at 384 px wide.${featured ? ` Frame ${featured.i}, the one most unlike the others, follows at full size.` : ""} Before you say text is readable or detail is right, check it at full size: call look on a frame (zoom into the region).`
+        : "";
       const content = [text(`${head}\n${lines.join("\n")}${nudge}`)];
       if (result.sheet) content.push(image(result.sheet));
+      if (featured) content.push(image(featured.png));
       return { isError: result.code === 2, content };
     } catch (e) {
       return { isError: true, content: [text(e instanceof UsageError ? e.message : `render failed: ${e.message}`)] };

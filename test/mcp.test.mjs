@@ -45,9 +45,10 @@ describe("komadori-mcp", () => {
     assert.match(textOf(r), /No check failed/);
     assert.match(textOf(r), /GPU renderer: /);
     assert.match(textOf(r), /384 px wide.*call look/s, "the result should tell the agent to zoom before judging detail");
-    assert.equal(images(r).length, 1);
+    assert.equal(images(r).length, 2, "the contact sheet and one full-size frame");
     assert.equal(images(r)[0].mimeType, "image/png");
     assert.ok(images(r)[0].data.length > 1000);
+    assert.match(textOf(r), /Frame \d+, the one most unlike the others, follows at full size/);
   });
 
   test("a failing scene is reported as a failed check, not a tool error", async () => {

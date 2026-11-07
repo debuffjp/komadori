@@ -34,6 +34,12 @@ describe("checks", () => {
     assert.match(r.stdout, /GPU renderer: /);
   });
 
+  test("the report names the sampled frame most unlike the others", () => {
+    const r = run("moving");
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    assert.ok(r.report.sampled.includes(r.report.featuredFrame), `featuredFrame ${r.report.featuredFrame}`);
+  });
+
   test("a scene that draws one flat colour fails", () => {
     const r = run("blank");
     assert.equal(r.status, 1, r.stdout);

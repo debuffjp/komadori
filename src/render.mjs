@@ -329,6 +329,20 @@ export async function render(options, io = {}) {
             },
           };
         });
+        // The frame most unlike the others: the sampled frame furthest from the average of all of them. A tool
+        // that shows one frame at full size should show the one most likely to hold the problem.
+        const mean = new Float32Array(grabs[0].d.length);
+        for (const g of grabs) for (let p = 0; p < mean.length; p++) mean[p] += g.d[p] / grabs.length;
+        let featured = grabs[0].i;
+        let most = -1;
+        for (const g of grabs) {
+          let dist = 0;
+          for (let p = 0; p < mean.length; p += 4) dist += Math.abs(g.d[p] - mean[p]) + Math.abs(g.d[p + 1] - mean[p + 1]) + Math.abs(g.d[p + 2] - mean[p + 2]);
+          if (dist > most) {
+            most = dist;
+            featured = g.i;
+          }
+        }
         const diffs = [];
         for (let a = 1; a < grabs.length; a++) {
           let d = 0;
@@ -361,7 +375,7 @@ export async function render(options, io = {}) {
         const buf = new Uint8Array(await blob.arrayBuffer());
         let bin = "";
         for (let k = 0; k < buf.length; k += 0x8000) bin += String.fromCharCode(...buf.subarray(k, k + 0x8000));
-        return { stats, diffs, sheet: btoa(bin) };
+        return { stats, diffs, featured, sheet: btoa(bin) };
       },
       { shots, cols: 5 },
     );
@@ -399,6 +413,7 @@ export async function render(options, io = {}) {
       seconds: Number(seconds.toFixed(1)),
       framesPerSecond: Number((stepped / seconds).toFixed(1)),
       meanFrameDifference: Number(avgDiff.toFixed(2)),
+      featuredFrame: analysis.featured,
       failures: fails,
       warnings: warns,
       errors: [...new Set(errors)],
