@@ -1,0 +1,72 @@
+{
+  "date": "2026-11-07T10:52:01.380Z",
+  "agent": "claude",
+  "model": "sonnet",
+  "budget": "2",
+  "runs": 3,
+  "results": [
+    {
+      "task": "broken-shader",
+      "arm": "B",
+      "run": 1,
+      "pass": true,
+      "detail": "the middle is 137 luma levels brighter than the corner (needs 40 or more)",
+      "score": 0,
+      "turns": 4,
+      "cost": 0.0723,
+      "tokens": {
+        "input": 8,
+        "output": 1004,
+        "cacheRead": 150485,
+        "cacheWrite": 11801
+      },
+      "renders": 0,
+      "looks": 0,
+      "diffs": 0,
+      "seconds": 26.9,
+      "status": 0
+    },
+    {
+      "task": "broken-shader",
+      "arm": "B",
+      "run": 2,
+      "pass": true,
+      "detail": "the middle is 137 luma levels brighter than the corner (needs 40 or more)",
+      "score": 0,
+      "turns": 5,
+      "cost": 0.0781,
+      "tokens": {
+        "input": 8,
+        "output": 1067,
+        "cacheRead": 152921,
+        "cacheWrite": 13021
+      },
+      "renders": 0,
+      "looks": 0,
+      "diffs": 0,
+      "seconds": 19.2,
+      "status": 0
+    },
+    {
+      "task": "broken-shader",
+      "arm": "B",
+      "run": 3,
+      "pass": true,
+      "detail": "the middle is 137 luma levels brighter than the corner (needs 40 or more)",
+      "score": 0,
+      "turns": 5,
+      "cost": 0.0786,
+      "tokens": {
+        "input": 8,
+        "output": 1102,
+        "cacheRead": 152154,
+        "cacheWrite": 13086
+      },
+      "renders": 0,
+      "looks": 0,
+      "diffs": 0,
+      "seconds": 21.9,
+      "status": 0
+    }
+  ]
+}

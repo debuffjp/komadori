@@ -16,7 +16,7 @@ On spryte's million-boid demo, one `draw.sprites` call carries 1,000,000 boids a
 
 ## Built for agents
 
-An agent writing a spryte scene needs two things: a small API to learn, and a way to see what it drew. spryte's whole [agent cheat sheet](https://github.com/debuffjp/debuff/blob/main/packages/spryte/docs/agent-cheatsheet.md) is one 7.7 KB page, about 3,200 tokens (counted), and komadori is the way to see: a contact sheet of the run, a few full-size frames, and checks that catch a blank, frozen or crashing scene before anyone looks. [docs/agent-guide.md](docs/agent-guide.md) has the loop.
+An agent writing a spryte scene needs two things: a small API to learn, and a way to check what it drew. spryte's whole [agent cheat sheet](https://github.com/debuffjp/debuff/blob/main/packages/spryte/docs/agent-cheatsheet.md) is one 7.7 KB page, about 3,200 tokens (counted), and komadori is the way to check: a contact sheet of the run, a few full-size frames, and checks that catch a blank, frozen or crashing scene before anyone looks. [docs/agent-guide.md](docs/agent-guide.md) has the loop.
 
 ## Fast clips: `--capture canvas`
 
@@ -29,6 +29,8 @@ npx komadori dist --query "capture=1" --frames 600 --size 1920x1080 --mp4 clip.m
 On spryte's million-boid demo, a 600-frame 1920x1080 clip (10 s at 60 fps) took 14.4 s on a Radeon 780M and 11.9 s on an RTX 5060 Laptop, including the 20 frames sampled for the checks. The screenshot path takes about 50 s for the same clip on the same machine. The scene itself is most of what's left: stepping the million boids on the CPU runs at 58 to 80 frames/s, so a clip takes close to real time, not less. Measured 2026-11-07, Chrome, Windows 11.
 
 The clip is the canvas's pixels at its backing size. HTML drawn over the canvas (a title, a logo) is not in it, and a canvas backing size that differs from the viewport gives a clip of the canvas's size. Use the default when you want the page as a person sees it. If Chrome can't encode H.264 at that size, komadori stops with exit code 2 and says to use `--capture screenshot`. It never falls back silently.
+
+Does it make agents better at writing scenes? On four small tasks, sonnet did as well without rendering, so that is not shown: see [bench/eval](bench/eval/README.md) for the runs, the costs and what they do and don't say.
 
 ## For agents: an MCP server
 

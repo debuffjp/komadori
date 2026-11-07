@@ -164,4 +164,23 @@ So "komadori makes agents better at scenes" is not shown. Don't claim it. A task
 
 The scene has three shader bugs (a reserved word as a variable name, a type mismatch, a `smoothstep` call missing an argument). komadori reports the first compile error with its line and source line (`'sample' : Illegal use of reserved word | float sample = length(p);`), and each agent fixed all three bugs in one edit, after one or two renders, and checked with a render afterwards. That meets the plan's acceptance test for shader errors: given komadori's output, an agent fixes the broken shaders in a single edit.
 
-It does not show that komadori was needed. Arms B and C were not run on this task, and a model that knows GLSL may find all three bugs by reading `scene.js` (the compiler stops at the first syntax error, so komadori shows the bugs one at a time, and the agents found the other two themselves). Until B has run, the honest claim is that komadori's shader error output is sufficient, not that it is better than reading. No agent called `look` or `diff`.
+It does not show that komadori was needed (arm B has since run: see below). Arms B and C were not run on this task when this was written, and a model that knows GLSL may find all three bugs by reading `scene.js` (the compiler stops at the first syntax error, so komadori shows the bugs one at a time, and the agents found the other two themselves). Until B has run, the honest claim is that komadori's shader error output is sufficient, not that it is better than reading. No agent called `look` or `diff`.
+
+### Results: `broken-shader`, arm B
+
+**Same task, arm B (cheat sheet only, no rendering), 3 runs, $0.23 in all.** All three passed, in 4 to 5 turns (median 5) at $0.072 to $0.079 a run, against arm A's 8 to 9 turns (median 8) and $0.106 to $0.110.
+
+The agents found all three bugs by reading `scene.js` and fixed them in one edit, and said so honestly ("I haven't run the page, so the fix is untested"). So komadori's shader error output was enough on this task and was not needed: the agents with it took about 1.7 times the turns and 1.4 times the money for the same result.
+
+## The verdict so far
+
+Four tasks, about $5.75 of agent runs, and on none of them did the komadori tools make sonnet's result better:
+
+| Task | Arm A (tools) | Arm B (sheet only) | Arm C (API only) |
+| --- | --- | --- | --- |
+| `cut-off-title` | 3/3 | 3/3 | 3/3 |
+| `washed-out-title` (rescored with the corrected check) | 3/6 without the nudge, 3/3 with nudge and full-size frame | 4/4 | 2/3 |
+| `match-reference` | 3/3 | 3/3 | 3/3 |
+| `broken-shader` | 3/3 | 3/3 | not run |
+
+The tools cost more each time they were used. These are small tasks with three to six runs a cell, on one model, and sonnet turned out to be good at reading code and at estimating from a picture. So the finding is narrow: for small, well-specified scenes, with spryte's cheat sheet in context, an agent does not need to render to get them right. It does not say the tools are useless: they catch a failing, blank or frozen page whatever the agent does, make clips quickly, and give a person a sheet to look at, and a larger scene or a weaker model may need them. None of those cases was tested here. The README no longer says the tools make agents better.
