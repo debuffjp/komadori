@@ -44,6 +44,22 @@ Until komadori is on npm, point the command at a checkout instead: `"command": "
 
 The three tool definitions are about 790 tokens counted as text. Claude Code lists MCP tools by name and loads their schemas on demand, so it carries about 140 of them up front (counted by comparing input tokens with and without the server, on claude-haiku-5-5). On spryte's 2x rain scene at 1080p, a 120-frame render takes about 5 s, and a crop or a diff about 1 s. Needs Chrome, and ffmpeg only if a render asks for a clip. It has no MCP dependency: the protocol subset it needs (initialize, tools/list, tools/call, ping) is about 100 lines, and the tests run it against the official SDK's client.
 
+## Golden frames: fail on a look
+
+The checks catch a crash, a blank scene and a frozen one. A golden frame catches the rest: a moved title, a shifted colour, stripes that came back. Save the frames you like, and later runs fail when one changes.
+
+```bash
+npx komadori determinism dist --query "capture=1" --frames 120 --samples 5 --size 1280x720
+npx komadori approve dist --query "capture=1" --frames 120 --samples 5 --size 1280x720 --golden golden
+npx komadori dist --query "capture=1" --frames 120 --samples 5 --size 1280x720 --golden golden
+```
+
+`approve` renders the scene twice and only saves the frames if the two runs match: a comparison means nothing if the scene isn't deterministic (a fixed 1/60 s step, seeded randomness, nothing tied to the real clock). A scene that fails its own checks can't be approved either. A later run with `--golden` compares each sampled frame, and fails with the frame, the share of pixels that changed, the changed region, and an image of golden, now and difference (`golden-diff-0042.png` in `--out`). If the settings differ from the ones the golden frames were made with (size, frames, which frames, the query), it says so, instead of showing a pixel difference. `approve` won't replace golden frames that exist without `--yes`: look at the new frames first, because replacing them changes what everything after is compared with.
+
+The limits come from measurement. On spryte's rain and warp scenes at 1080p, two runs on the same renderer differ by exactly 0, and across a Radeon 780M, an RTX 5060 Laptop (both Direct3D) and Vulkan SwiftShader the worst frame differed by a mean of 0.153/255 and 0.057% of pixels. On the same renderer a frame may differ in at most 0.01% of its pixels. Golden frames made on another renderer are compared with looser limits (0.25% of pixels, about four times the worst measured) and a warning says so. `--golden-tolerance 5` lets 5% of the pixels differ, and raises the mean limit to match. Goldens made on the Radeon passed on the RTX and on SwiftShader for both scenes, and a different scene failed with 99.9% of its pixels changed.
+
+Golden frames are PNGs, so keep them small: a low sample count and 720p. Five frames of the rain scene are 1.5 MB, of the warp starfield 4 MB.
+
 ## With spryte
 
 Give your page a stepped mode behind a query string, and point komadori at it:

@@ -20,6 +20,10 @@ With `komadori-mcp` the steps above are tool calls, with the images in the resul
 
 `look` and `diff` work on the last two renders, which the server keeps in memory. Keep `frames` modest in a render: a client may time out on a long one.
 
+## Golden frames
+
+To make a look something a run can fail on, `komadori approve` saves the sampled frames once the scene proves deterministic, and a run with `--golden dir` fails on any frame that no longer matches, with the changed region and an image of the difference. Don't run `approve --yes` yourself to make a failure go away: that is a decision about what the scene should look like, and it is the person's. See the README for the limits and why they are what they are.
+
 ## What it checks
 
 | Check | Result | What it means |

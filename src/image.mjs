@@ -48,79 +48,99 @@ export async function crop(png, region, zoom) {
 }
 
 /**
- * Compare two frames of the same size. `changed` is the share of pixels that differ by more than a small
- * threshold, `box` the smallest rectangle holding them, `mean` the average difference out of 255. The image shows
- * before, after and the difference (brighter is more changed) side by side, scaled to fit.
- * @returns {Promise<{ same: boolean, mean: number, changed: number, box: {x:number,y:number,w:number,h:number}|null, png: string }>}
+ * Compare pairs of frames of the same size, in one Chrome page. For each pair: `changed` is the share of pixels that
+ * differ by more than 8 levels, `box` the smallest rectangle holding them, `mean` the average difference out of 255.
+ * `png` is an image of before, after and the difference (brighter is more changed), scaled to fit. With
+ * `images: "over"` it is made only for pairs past `limits` ({ mean, changed } as a share, 0 to 1), with "always" for
+ * every pair, with "never" for none. A pair of different sizes comes back as `{ mismatch }`.
+ * @returns {Promise<Array<{ same: boolean, mean: number, changed: number, box: {x:number,y:number,w:number,h:number}|null, png?: string, mismatch?: string }>>}
  */
-export async function compare(before, after) {
+export async function compareMany(pairs, { images = "over", limits = { mean: 0, changed: 0 } } = {}) {
   return withPage((page) =>
     page.evaluate(
-      async ({ before, after, max }) => {
+      async ({ pairs, images, limits, max }) => {
         const load = async (png) => createImageBitmap(new Blob([Uint8Array.from(atob(png), (c) => c.charCodeAt(0))], { type: "image/png" }));
-        const [a, b] = [await load(before), await load(after)];
-        if (a.width !== b.width || a.height !== b.height) return { mismatch: `${a.width}x${a.height} against ${b.width}x${b.height}` };
         const read = (bmp) => {
           const cv = new OffscreenCanvas(bmp.width, bmp.height);
           const cx = cv.getContext("2d", { willReadFrequently: true });
           cx.drawImage(bmp, 0, 0);
           return cx.getImageData(0, 0, bmp.width, bmp.height);
         };
-        const da = read(a);
-        const db = read(b);
-        const diff = new ImageData(a.width, a.height);
-        let sum = 0;
-        let count = 0;
-        let x0 = a.width;
-        let y0 = a.height;
-        let x1 = -1;
-        let y1 = -1;
-        for (let p = 0; p < da.data.length; p += 4) {
-          const d = (Math.abs(da.data[p] - db.data[p]) + Math.abs(da.data[p + 1] - db.data[p + 1]) + Math.abs(da.data[p + 2] - db.data[p + 2])) / 3;
-          sum += d;
-          const v = Math.min(255, d * 6);
-          diff.data[p] = diff.data[p + 1] = diff.data[p + 2] = v;
-          diff.data[p + 3] = 255;
-          if (d > 8) {
-            count++;
-            const px = (p / 4) % a.width;
-            const py = Math.floor(p / 4 / a.width);
-            if (px < x0) x0 = px;
-            if (px > x1) x1 = px;
-            if (py < y0) y0 = py;
-            if (py > y1) y1 = py;
+        const results = [];
+        for (const { a: before, b: after } of pairs) {
+          const [a, b] = [await load(before), await load(after)];
+          if (a.width !== b.width || a.height !== b.height) {
+            results.push({ mismatch: `${a.width}x${a.height} against ${b.width}x${b.height}` });
+            continue;
           }
+          const da = read(a);
+          const db = read(b);
+          const diff = new ImageData(a.width, a.height);
+          let sum = 0;
+          let count = 0;
+          let x0 = a.width;
+          let y0 = a.height;
+          let x1 = -1;
+          let y1 = -1;
+          for (let p = 0; p < da.data.length; p += 4) {
+            const d = (Math.abs(da.data[p] - db.data[p]) + Math.abs(da.data[p + 1] - db.data[p + 1]) + Math.abs(da.data[p + 2] - db.data[p + 2])) / 3;
+            sum += d;
+            const v = Math.min(255, d * 6);
+            diff.data[p] = diff.data[p + 1] = diff.data[p + 2] = v;
+            diff.data[p + 3] = 255;
+            if (d > 8) {
+              count++;
+              const px = (p / 4) % a.width;
+              const py = Math.floor(p / 4 / a.width);
+              if (px < x0) x0 = px;
+              if (px > x1) x1 = px;
+              if (py < y0) y0 = py;
+              if (py > y1) y1 = py;
+            }
+          }
+          const total = a.width * a.height;
+          const res = {
+            same: count === 0,
+            mean: sum / total,
+            changed: count / total,
+            box: count ? { x: x0, y: y0, w: x1 - x0 + 1, h: y1 - y0 + 1 } : null,
+          };
+          const want = images === "always" || (images === "over" && (res.mean > limits.mean || res.changed > limits.changed));
+          if (want) {
+            const s = Math.min(1, max / (a.width * 3 + 20), 600 / a.height);
+            const w = Math.round(a.width * s);
+            const h = Math.round(a.height * s);
+            const sheet = new OffscreenCanvas(w * 3 + 20, h);
+            const sc = sheet.getContext("2d");
+            sc.fillStyle = "#222";
+            sc.fillRect(0, 0, sheet.width, sheet.height);
+            const dc = new OffscreenCanvas(a.width, a.height);
+            dc.getContext("2d").putImageData(diff, 0, 0);
+            sc.drawImage(a, 0, 0, w, h);
+            sc.drawImage(b, w + 10, 0, w, h);
+            sc.drawImage(dc, 2 * w + 20, 0, w, h);
+            const buf = new Uint8Array(await (await sheet.convertToBlob({ type: "image/png" })).arrayBuffer());
+            let bin = "";
+            for (let k = 0; k < buf.length; k += 0x8000) bin += String.fromCharCode(...buf.subarray(k, k + 0x8000));
+            res.png = btoa(bin);
+          }
+          results.push(res);
         }
-        const total = a.width * a.height;
-        const s = Math.min(1, max / (a.width * 3 + 20), 600 / a.height);
-        const w = Math.round(a.width * s);
-        const h = Math.round(a.height * s);
-        const sheet = new OffscreenCanvas(w * 3 + 20, h);
-        const sc = sheet.getContext("2d");
-        sc.fillStyle = "#222";
-        sc.fillRect(0, 0, sheet.width, sheet.height);
-        const dc = new OffscreenCanvas(a.width, a.height);
-        dc.getContext("2d").putImageData(diff, 0, 0);
-        sc.drawImage(a, 0, 0, w, h);
-        sc.drawImage(b, w + 10, 0, w, h);
-        sc.drawImage(dc, 2 * w + 20, 0, w, h);
-        const buf = new Uint8Array(await (await sheet.convertToBlob({ type: "image/png" })).arrayBuffer());
-        let bin = "";
-        for (let k = 0; k < buf.length; k += 0x8000) bin += String.fromCharCode(...buf.subarray(k, k + 0x8000));
-        return {
-          same: count === 0,
-          mean: sum / total,
-          changed: count / total,
-          box: count ? { x: x0, y: y0, w: x1 - x0 + 1, h: y1 - y0 + 1 } : null,
-          png: btoa(bin),
-        };
+        return results;
       },
-      { before, after, max: MAX_SIDE },
+      { pairs, images, limits, max: MAX_SIDE },
     ),
-  ).then((r) => {
-    if (r.mismatch) throw new Error(`the two frames are different sizes (${r.mismatch}), so they can't be compared`);
-    return r;
-  });
+  );
+}
+
+/**
+ * Compare two frames of the same size: `compareMany` for one pair, always with an image. Throws if the sizes differ.
+ * @returns {Promise<{ same: boolean, mean: number, changed: number, box: {x:number,y:number,w:number,h:number}|null, png: string }>}
+ */
+export async function compare(before, after) {
+  const [r] = await compareMany([{ a: before, b: after }], { images: "always" });
+  if (r.mismatch) throw new Error(`the two frames are different sizes (${r.mismatch}), so they can't be compared`);
+  return r;
 }
 
 /**

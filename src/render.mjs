@@ -5,6 +5,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { dirname, extname, join, resolve } from "node:path";
 import { chromium } from "playwright-core";
+import { checkGolden } from "./golden.mjs";
 
 /**
  * Turn what the page's WebGL hook recorded into plain findings: the stage, the line of the author's own source, the
@@ -70,6 +71,8 @@ export class UsageError extends Error {}
  * @property {string} [query]
  * @property {number} [wait] ms to wait for window.__frame, default 30000
  * @property {"screenshot"|"canvas"} [capture]
+ * @property {string} [golden] folder of golden frames (made by komadori approve) to compare the sampled frames with
+ * @property {number} [goldenTolerance] percent of pixels that may differ from a golden frame (replaces the default)
  */
 
 /**
@@ -483,6 +486,12 @@ export async function render(options, io = {}) {
     }
 
     await mkdir(out, { recursive: true });
+    let golden;
+    if (options.golden) {
+      golden = await checkGolden({ dir: resolve(options.golden), out, renderer, size: `${width}x${height}`, frames: stepped, sampled: shots.map((s) => s.i), query, shots, tolerance: options.goldenTolerance === undefined ? undefined : Number(options.goldenTolerance) });
+      fails.push(...golden.failures);
+      warns.push(...golden.warnings);
+    }
     if (keepFrames) {
       await mkdir(resolve(keepFrames), { recursive: true });
       for (const s of shots)
@@ -502,6 +511,7 @@ export async function render(options, io = {}) {
       meanFrameDifference: Number(avgDiff.toFixed(2)),
       featuredFrame: analysis.featured,
       shaderErrors,
+      golden: golden?.summary,
       failures: fails,
       warnings: warns,
       errors: [...new Set(errors)],
