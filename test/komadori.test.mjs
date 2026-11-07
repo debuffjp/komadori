@@ -99,3 +99,33 @@ describe("running it", () => {
     assert.match(spawnSync(process.execPath, [cli, "--version"], { encoding: "utf8" }).stdout, /^\d+\.\d+\.\d+/);
   });
 });
+describe("--capture canvas", () => {
+  const hasFfmpeg = !spawnSync("ffmpeg", ["-version"]).error && !spawnSync("ffprobe", ["-version"]).error;
+  const probe = (file) =>
+    spawnSync("ffprobe", ["-v", "error", "-select_streams", "v:0", "-count_frames", "-show_entries", "stream=width,height,nb_read_frames,codec_name", "-of", "csv=p=0", file], { encoding: "utf8" }).stdout.trim();
+
+  test("encodes the canvas in the page into an mp4 with every frame", { skip: hasFfmpeg ? false : "no ffmpeg or ffprobe" }, () => {
+    const file = join(scratch, "canvas-clip", "clip.mp4");
+    const r = run("moving", ["--mp4", file, "--capture", "canvas"]);
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    assert.equal(r.report.captureMode, "canvas");
+    assert.equal(r.report.clipSize, "640x360");
+    assert.equal(probe(file), "h264,640,360,30");
+  });
+
+  test("a page with no canvas stops with exit code 2 and points at screenshot mode", () => {
+    const r = run("nocanvas", ["--mp4", join(scratch, "nc.mp4"), "--capture", "canvas"]);
+    assert.equal(r.status, 2, r.stdout + r.stderr);
+    assert.match(r.stderr, /no canvas/);
+    assert.match(r.stderr, /--capture screenshot/);
+  });
+
+  test("it needs --mp4, and only knows two modes", () => {
+    const a = spawnSync(process.execPath, [cli, fixture("moving"), "--capture", "canvas"], { encoding: "utf8" });
+    assert.equal(a.status, 2);
+    assert.match(a.stderr, /--mp4/);
+    const b = spawnSync(process.execPath, [cli, fixture("moving"), "--capture", "gpu", "--mp4", "x.mp4"], { encoding: "utf8" });
+    assert.equal(b.status, 2);
+  });
+});
+

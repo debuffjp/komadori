@@ -53,6 +53,10 @@ Two rules keep a render honest. Use a fixed step (1/60 s), so the clip plays at 
 
 Return only after the draw has been submitted. If your engine draws on its own ticker, stop the ticker in this mode.
 
+## Making a clip quickly
+
+`--mp4` alone screenshots the whole page per frame. `--capture canvas` encodes the canvas inside the page, about 3 to 4 times faster on a heavy scene, but the clip holds only the canvas: no HTML overlays, and the size is the canvas's backing size. Use it for drafts and for scenes drawn entirely on one canvas.
+
 ## Which GPU did it use
 
 The first line it prints is the renderer. On a machine with two GPUs, Chrome picks the integrated one by default: set `HIGH_GPU=1` to ask for the discrete one. A software renderer gets a warning, because its speed numbers say nothing about a real GPU. The `/s` figure in the summary includes taking the screenshots, so it measures the recording, not the scene.

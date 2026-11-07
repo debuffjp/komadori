@@ -1,0 +1,10 @@
+<!doctype html>
+<meta charset="utf-8" />
+<p id="t">no canvas here</p>
+<script>
+let n = 0;
+window.__frame = () => {
+  n++;
+  document.getElementById("t").style.marginLeft = (n * 5) % 400 + "px";
+};
+</script>

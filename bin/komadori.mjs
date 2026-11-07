@@ -32,6 +32,7 @@ const USAGE = `usage: komadori <dist-dir | url> [options]
   --mp4 file       also encode every frame (needs ffmpeg with libx264 on PATH)
   --fps n          the clip's frame rate (default 60)
   --query q        appended to the page URL
+  --capture mode   how --mp4 is made: screenshot (default, the whole page) or canvas (the canvas only, much faster)
   --wait ms        how long to wait for window.__frame to appear (default 30000)
   --help, --version
 Environment: HIGH_GPU=1, CHROME=/path/to/chrome, SOFTWARE_GL=1`;
@@ -44,7 +45,7 @@ if (args.includes("--version")) {
   console.log(pkg.version);
   process.exit(0);
 }
-const KNOWN = new Set(["frames", "size", "samples", "out", "keep-frames", "mp4", "fps", "query", "wait"]);
+const KNOWN = new Set(["frames", "size", "samples", "out", "keep-frames", "mp4", "fps", "query", "wait", "capture"]);
 const unknown = args.find((a) => a.startsWith("--") && !KNOWN.has(a.slice(2)));
 if (unknown) {
   console.error(`Unknown option ${unknown}.
@@ -69,8 +70,17 @@ const mp4 = opt("mp4", "");
 const keepFrames = opt("keep-frames", "");
 const query = opt("query", "");
 const waitMs = Number(opt("wait", 30000));
+const capture = opt("capture", "screenshot");
 if (![frames, samples, width, height, fps, waitMs].every((n) => Number.isInteger(n) && n > 0)) {
   console.error("--frames, --samples, --size, --fps and --wait must be whole numbers above zero");
+  process.exit(2);
+}
+if (!["screenshot", "canvas"].includes(capture)) {
+  console.error("--capture must be screenshot or canvas");
+  process.exit(2);
+}
+if (capture === "canvas" && !mp4) {
+  console.error("--capture canvas changes how --mp4 is made: add --mp4 file, or leave --capture out.");
   process.exit(2);
 }
 if (mp4 && spawnSync("ffmpeg", ["-version"]).error) {
@@ -153,35 +163,68 @@ try {
   await finish(2);
 }
 
+// --capture canvas: encode the canvas itself in the page (WebCodecs), so no screenshot is made per frame.
+// The clip is the canvas's pixels at its backing size: anything the page puts over it in HTML is not in it.
+let clip;
+if (capture === "canvas") {
+  clip = await page.evaluate(
+    async ({ fps }) => {
+      const canvases = [...document.querySelectorAll("canvas")].sort((a, b) => b.width * b.height - a.width * a.height);
+      if (!canvases.length) return { error: "the page has no canvas to encode" };
+      if (!window.VideoEncoder) return { error: "this browser has no WebCodecs VideoEncoder" };
+      const w = canvases[0].width & ~1;
+      const h = canvases[0].height & ~1;
+      // The H.264 level has to allow the size and rate: 4.2 up to 1080p60, 5.1, then 5.2.
+      const rate = Math.ceil(w / 16) * Math.ceil(h / 16) * fps;
+      const codec = rate <= 522240 ? "avc1.64002a" : rate <= 983040 ? "avc1.640033" : "avc1.640034";
+      const bitrate = Math.round(w * h * fps * 0.3);
+      const config = { codec, width: w, height: h, bitrate, framerate: fps, avc: { format: "annexb" }, latencyMode: "quality" };
+      const ok = await VideoEncoder.isConfigSupported(config);
+      if (!ok.supported) return { error: `this browser can't encode H.264 at ${w}x${h} and ${fps} fps` };
+      const state = { canvas: canvases[0], chunks: [], failure: null, fps };
+      state.enc = new VideoEncoder({
+        output: (c) => {
+          const b = new Uint8Array(c.byteLength);
+          c.copyTo(b);
+          state.chunks.push(b);
+        },
+        error: (e) => {
+          state.failure = e.message;
+        },
+      });
+      state.enc.configure(config);
+      window.__komadori = state;
+      return { w, h };
+    },
+    { fps },
+  );
+  if (clip.error) {
+    console.error(`--capture canvas: ${clip.error}. Use --capture screenshot.`);
+    await finish(2);
+  }
+}
+// Runs in the page: take the chunks the encoder has finished, as base64.
+const takeChunks = () => {
+  const s = window.__komadori;
+  const out = [];
+  for (const b of s.chunks.splice(0)) {
+    let bin = "";
+    for (let k = 0; k < b.length; k += 0x8000) bin += String.fromCharCode(...b.subarray(k, k + 0x8000));
+    out.push(btoa(bin));
+  }
+  return { chunks: out, failure: s.failure };
+};
+
 let ff;
 let ffClosed;
 if (mp4) {
   // ffmpeg starts now and won't make the folder: an --mp4 path inside a new --out folder would fail.
   await mkdir(dirname(resolve(mp4)), { recursive: true });
-  ff = spawn(
-    "ffmpeg",
-    [
-      "-y",
-      "-f",
-      "image2pipe",
-      "-framerate",
-      String(fps),
-      "-c:v",
-      "mjpeg",
-      "-i",
-      "-",
-      "-c:v",
-      "libx264",
-      "-crf",
-      "16",
-      "-pix_fmt",
-      "yuv420p",
-      "-movflags",
-      "+faststart",
-      resolve(mp4),
-    ],
-    { stdio: ["pipe", "ignore", "inherit"] },
-  );
+  const input =
+    capture === "canvas"
+      ? ["-f", "h264", "-framerate", String(fps), "-i", "-", "-c:v", "copy"]
+      : ["-f", "image2pipe", "-framerate", String(fps), "-c:v", "mjpeg", "-i", "-", "-c:v", "libx264", "-crf", "16", "-pix_fmt", "yuv420p"];
+  ff = spawn("ffmpeg", ["-y", ...input, "-movflags", "+faststart", resolve(mp4)], { stdio: ["pipe", "ignore", "inherit"] });
   ffClosed = new Promise((r) => ff.on("close", r));
 }
 const keep = new Set(Array.from({ length: samples }, (_, i) => Math.round((i * (frames - 1)) / Math.max(samples - 1, 1))));
@@ -190,7 +233,23 @@ const t0 = Date.now();
 let stepped = 0;
 for (let i = 0; i < frames; i++) {
   try {
-    await page.evaluate(() => window.__frame());
+    if (capture === "canvas") {
+      const got = await page.evaluate(
+        async ({ i, takeSrc }) => {
+          const s = window.__komadori;
+          await window.__frame();
+          const f = new VideoFrame(s.canvas, { timestamp: Math.round((i * 1e6) / s.fps) });
+          s.enc.encode(f, { keyFrame: i % s.fps === 0 });
+          f.close();
+          // Don't let the encoder queue grow without limit.
+          while (s.enc.encodeQueueSize > 8) await new Promise((r) => setTimeout(r, 1));
+          return new Function(`return (${takeSrc})`)()();
+        },
+        { i, takeSrc: takeChunks.toString() },
+      );
+      if (got.failure) throw new Error(`the video encoder failed: ${got.failure}`);
+      for (const c of got.chunks) ff.stdin.write(Buffer.from(c, "base64"));
+    } else await page.evaluate(() => window.__frame());
   } catch (e) {
     // A scene that throws is a finding, not a crash of this tool: keep the frames so far and report it.
     errors.push(`window.__frame() threw at frame ${i}: ${String(e.message).split("\n")[0]}`);
@@ -198,9 +257,23 @@ for (let i = 0; i < frames; i++) {
   }
   stepped++;
   if (keep.has(i)) shots.push({ i, png: (await page.screenshot({ type: "png" })).toString("base64") });
-  if (ff) {
+  if (ff && capture === "screenshot") {
     const jpg = await page.screenshot({ type: "jpeg", quality: 95 });
     if (!ff.stdin.write(jpg)) await new Promise((r) => ff.stdin.once("drain", r));
+  }
+}
+if (capture === "canvas" && stepped) {
+  try {
+    const rest = await page.evaluate(
+      async ({ takeSrc }) => {
+        await window.__komadori.enc.flush();
+        return new Function(`return (${takeSrc})`)()();
+      },
+      { takeSrc: takeChunks.toString() },
+    );
+    for (const c of rest.chunks) ff.stdin.write(Buffer.from(c, "base64"));
+  } catch (e) {
+    errors.push(`the video encoder failed: ${String(e.message).split("\n")[0]}`);
   }
 }
 const seconds = (Date.now() - t0) / 1000;
@@ -358,6 +431,8 @@ const report = {
   renderer,
   size: `${width}x${height}`,
   frames: stepped,
+  captureMode: mp4 ? capture : undefined,
+  clipSize: clip ? `${clip.w}x${clip.h}` : undefined,
   sampled: shots.map((s) => s.i),
   seconds: Number(seconds.toFixed(1)),
   framesPerSecond: Number((stepped / seconds).toFixed(1)),
