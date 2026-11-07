@@ -44,7 +44,7 @@ describe("eval harness", () => {
     assert.equal(t.cost, 0);
   });
 
-  for (const task of ["cut-off-title", "washed-out-title", "match-reference"]) {
+  for (const task of ["cut-off-title", "washed-out-title", "match-reference", "broken-shader"]) {
     test(`an agent that changes nothing fails the ${task} check`, { skip: haveSpryte ? false : "set SPRYTE_CHECKOUT" }, () => {
       const r = fake("fake:noop", task);
       assert.equal(r.status, 0, r.stdout + r.stderr);
