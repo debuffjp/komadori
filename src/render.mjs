@@ -6,6 +6,54 @@ import { createServer } from "node:http";
 import { dirname, extname, join, resolve } from "node:path";
 import { chromium } from "playwright-core";
 
+/**
+ * Turn what the page's WebGL hook recorded into plain findings: the stage, the line of the author's own source, the
+ * compiler's words and the line itself. The author's source starts after the last "#line K" directive, which is how
+ * spryte (and anything careful) builds its shaders, so the driver's line numbers are already theirs.
+ */
+export function describeShaderFailures(raw) {
+  const seen = new Set();
+  const out = [];
+  for (const f of raw ?? []) {
+    const key = `${f.kind}|${f.log}|${f.source}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const srcLines = String(f.source ?? "").split("\n");
+    let dir = -1;
+    let k = 1;
+    srcLines.forEach((l, i) => {
+      const d = /^\s*#line\s+(\d+)/.exec(l);
+      if (d) {
+        dir = i;
+        k = Number(d[1]);
+      }
+    });
+    const logLines = String(f.log ?? "").split("\n").map((l) => l.trim()).filter(Boolean);
+    const errorLines = logLines.filter((l) => /error/i.test(l));
+    for (const l of (errorLines.length ? errorLines : logLines.slice(0, 1)).slice(0, 3)) {
+      const m = /ERROR:\s*\d+:(\d+):\s*(.*)/.exec(l) ?? /\d+:(\d+)\(\d+\):\s*(?:error:\s*)?(.*)/.exec(l);
+      const line = m ? Number(m[1]) : null;
+      const message = m ? m[2] : l;
+      const idx = line === null ? -1 : dir >= 0 ? dir + 1 + (line - k) : line - 1;
+      const text = idx >= 0 ? (srcLines[idx]?.trim() ?? null) : null;
+      const stage = f.stage ?? null;
+      // A compiler reports a syntax error where it gave up, which is usually the line after the mistake (a missing
+      // semicolon shows up on the next line), so show the line before as well.
+      const before = line !== null && /syntax error/i.test(message) && idx - 1 > dir ? (srcLines[idx - 1]?.trim() ?? null) : null;
+      out.push({
+        kind: f.kind,
+        stage,
+        line,
+        message,
+        text,
+        before,
+        summary: `shader failed to ${f.kind === "link" ? "link" : "compile"}${stage ? ` (${stage})` : ""}${line === null ? "" : ` at line ${line}`}: ${message}${text ? `  |  ${text}` : ""}${before ? `  (a syntax error is often on the line before: ${before})` : ""}`,
+      });
+    }
+  }
+  return out;
+}
+
 /** Bad input or an environment that can't render: the CLI turns it into exit code 2. */
 export class UsageError extends Error {}
 
@@ -99,6 +147,38 @@ export async function render(options, io = {}) {
     const finish = (code, extra = {}) => ({ code, ...extra });
 
     const page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: 1 });
+    // Record every shader that fails to compile or link, with its source, whatever engine drew it: a page that catches
+    // the error itself would otherwise leave only a blank frame to go on. (Checking the status after each compile is
+    // cheap here, but it does stop a page overlapping shader compiles, so it only runs under komadori.)
+    await page.addInitScript(() => {
+      window.__komadoriShaderFailures = [];
+      const patch = (proto) => {
+        if (!proto || proto.__komadoriPatched) return;
+        const compile = proto.compileShader;
+        proto.compileShader = function (shader) {
+          compile.call(this, shader);
+          try {
+            if (!this.getShaderParameter(shader, this.COMPILE_STATUS))
+              window.__komadoriShaderFailures.push({
+                kind: "compile",
+                stage: this.getShaderParameter(shader, this.SHADER_TYPE) === this.VERTEX_SHADER ? "vertex" : "fragment",
+                log: this.getShaderInfoLog(shader) ?? "",
+                source: this.getShaderSource(shader) ?? "",
+              });
+          } catch {}
+        };
+        const link = proto.linkProgram;
+        proto.linkProgram = function (program) {
+          link.call(this, program);
+          try {
+            if (!this.getProgramParameter(program, this.LINK_STATUS)) window.__komadoriShaderFailures.push({ kind: "link", log: this.getProgramInfoLog(program) ?? "", source: "" });
+          } catch {}
+        };
+        proto.__komadoriPatched = true;
+      };
+      patch(window.WebGL2RenderingContext?.prototype);
+      patch(window.WebGLRenderingContext?.prototype);
+    });
     const errors = [];
     page.on("pageerror", (e) => errors.push(`pageerror: ${e.message}`));
     // A failed request is reported with its URL below, so skip the console's anonymous copy of it.
@@ -213,7 +293,7 @@ export async function render(options, io = {}) {
         } else await page.evaluate(() => window.__frame());
       } catch (e) {
         // A scene that throws is a finding, not a crash of this tool: keep the frames so far and report it.
-        errors.push(`window.__frame() threw at frame ${i}: ${String(e.message).split("\n")[0]}`);
+        errors.push(`window.__frame() threw at frame ${i}: ${String(e.message).split("\n").slice(0, 4).join(" / ")}`);
         break;
       }
       stepped++;
@@ -243,13 +323,19 @@ export async function render(options, io = {}) {
       if (await ffClosed) errors.push("ffmpeg failed: the clip is incomplete");
     }
 
+    // Shader failures first: they are usually the reason for a blank or throwing scene. A thrown "failed to compile"
+    // message only repeats them, so those are dropped from the page errors when the hook saw the shader.
+    const shaderErrors = describeShaderFailures(await page.evaluate(() => window.__komadoriShaderFailures ?? []).catch(() => []));
+    const shaderLines = shaderErrors.map((s) => s.summary);
+    const pageErrors = shaderErrors.length ? errors.filter((e) => !/failed to (compile|link)/.test(e)) : errors;
+    if (shaderLines.length) shaderLines[0] += "  (a failed shader often leaves the frame blank)";
+
     if (!shots.length) {
       // Nothing to look at: the scene threw before the first sampled frame.
       await mkdir(out, { recursive: true });
-      const failures = [...new Set(errors)];
-      const empty = { url, renderer, size: `${width}x${height}`, frames, sampled: [], failures, warnings: [], errors: failures };
-      await writeFile(join(out, "report.json"), `${JSON.stringify(empty, null, 2)}
-    `);
+      const failures = [...shaderLines, ...new Set(pageErrors)];
+      const empty = { url, renderer, size: `${width}x${height}`, frames, sampled: [], failures, warnings: [], errors: failures, shaderErrors };
+      await writeFile(join(out, "report.json"), `${JSON.stringify(empty, null, 2)}\n`);
       for (const f of failures) log(`FAIL: ${f}`);
       log("FAIL: no frame was captured");
       return finish(1, { report: { ...empty, failures: [...failures, "no frame was captured"] }, shots: [] });
@@ -382,7 +468,8 @@ export async function render(options, io = {}) {
 
     const fails = [];
     const warns = [];
-    if (errors.length) fails.push(`${errors.length} page error(s): ${[...new Set(errors)].slice(0, 3).join(" | ")}`);
+    fails.push(...shaderLines);
+    if (pageErrors.length) fails.push(`${pageErrors.length} page error(s): ${[...new Set(pageErrors)].slice(0, 3).join(" | ")}`);
     const blank = analysis.stats.filter((s) => s.std < 1);
     if (blank.length === analysis.stats.length) fails.push("every sampled frame is a single flat colour");
     else if (blank.length) warns.push(`${blank.length} sampled frame(s) are a single flat colour: #${blank.map((s) => s.frame).join(", #")}`);
@@ -414,6 +501,7 @@ export async function render(options, io = {}) {
       framesPerSecond: Number((stepped / seconds).toFixed(1)),
       meanFrameDifference: Number(avgDiff.toFixed(2)),
       featuredFrame: analysis.featured,
+      shaderErrors,
       failures: fails,
       warnings: warns,
       errors: [...new Set(errors)],

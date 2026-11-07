@@ -25,6 +25,7 @@ With `komadori-mcp` the steps above are tool calls, with the images in the resul
 | Check | Result | What it means |
 | --- | --- | --- |
 | The page throws, logs a console error or a request fails | FAIL | Fix the page before judging the picture. |
+| A WebGL shader fails to compile or link | FAIL | The line names the stage, the line of your own shader source, the compiler's message and the line itself. Fix this first: it is usually why the frame is blank. For a syntax error it also shows the line before, since the compiler blames the line after a missing semicolon. |
 | `window.__frame()` throws | FAIL | The run stops there, with the frames up to that point. |
 | Every sampled frame is one flat colour | FAIL | Blank scene: nothing drew. |
 | Sampled frames barely differ (under 0.2/255 on average) | FAIL | Frozen scene. |

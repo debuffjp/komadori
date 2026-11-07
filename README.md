@@ -69,7 +69,7 @@ komadori doesn't use spryte's code. It drives Chrome with Playwright, and the pa
 
 ## What it checks
 
-A broken page, a blank or frozen scene, and content cut off at the edge. It can't see stripes or unreadable text: look at `contact-sheet.png` for those.
+A broken page, a shader that doesn't compile (with the line of your own source, the compiler's message and the line itself), a blank or frozen scene, and content cut off at the edge. It can't see stripes or unreadable text: look at `contact-sheet.png` for those.
 
 Exit code: 0 when no check failed (warnings don't count), 1 when one did, 2 when the render couldn't run.
 

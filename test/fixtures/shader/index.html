@@ -1,0 +1,58 @@
+<!doctype html>
+<meta charset="utf-8" />
+<style>html,body{margin:0;background:#101418}canvas{display:block}</style>
+<canvas id="c" width="640" height="360"></canvas>
+<script>
+// A WebGL2 page whose fragment shader is built the way spryte builds its custom ones: a header, then "#line 1", then
+// the author's source, so the compiler's line numbers are the author's own. ?bug= picks what is wrong with the source
+// and ?mode=swallow makes the page catch the error itself instead of letting it throw out of __frame().
+const q = new URLSearchParams(location.search);
+const bug = q.get("bug") ?? "none";
+const mode = q.get("mode") ?? "throw";
+const user = {
+  none: "vec4 effect(vec4 color, vec2 uv) {\n  float k = 0.5 + 0.5 * sin(t);\n  return vec4(uv.x, k, uv.y, 1.0);\n}",
+  undeclared: "vec4 effect(vec4 color, vec2 uv) {\n  float k = 0.5;\n  return vec4(uv.x, wobble * k, uv.y, 1.0);\n}",
+  type: "vec4 effect(vec4 color, vec2 uv) {\n  float k = vec2(0.5, 0.5);\n  return vec4(uv.x, k, uv.y, 1.0);\n}",
+  semicolon: "vec4 effect(vec4 color, vec2 uv) {\n  float k = 0.5\n  return vec4(uv.x, k, uv.y, 1.0);\n}",
+}[bug];
+const gl = document.getElementById("c").getContext("webgl2");
+const header = "#version 300 es\nprecision mediump float;\nuniform float t;\nout vec4 outColor;\n";
+const main = "\nvoid main() { outColor = effect(vec4(1.0), gl_FragCoord.xy / vec2(640.0, 360.0)); }\n";
+const vs = "#version 300 es\nvoid main() { vec2 p = vec2(float((gl_VertexID << 1) & 2), float(gl_VertexID & 2)); gl_Position = vec4(p * 2.0 - 1.0, 0.0, 1.0); }";
+function compile(type, src) {
+  const s = gl.createShader(type);
+  gl.shaderSource(s, src);
+  gl.compileShader(s);
+  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error("custom shader failed to compile:\n" + gl.getShaderInfoLog(s));
+  return s;
+}
+let program;
+let n = 0;
+let failed = false;
+function build() {
+  program = gl.createProgram();
+  gl.attachShader(program, compile(gl.VERTEX_SHADER, vs));
+  gl.attachShader(program, compile(gl.FRAGMENT_SHADER, header + "#line 1\n" + user + main));
+  gl.linkProgram(program);
+}
+window.__frame = () => {
+  n++;
+  if (!program && !failed) {
+    try {
+      build();
+    } catch (e) {
+      failed = true;
+      if (mode === "throw") throw e;
+      console.warn("swallowed:", e.message.split("\n")[0]);
+    }
+  }
+  gl.viewport(0, 0, 640, 360);
+  gl.clearColor(0.06, 0.08, 0.1, 1);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  if (program) {
+    gl.useProgram(program);
+    gl.uniform1f(gl.getUniformLocation(program, "t"), n * 0.2);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  }
+};
+</script>
