@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.1
+
+The README's MCP config was wrong. It said `npx -y komadori-mcp`, but `komadori-mcp` is a command inside the `komadori` package, not a package of its own, so that line returned a 404. The working config is `npx -y -p komadori komadori-mcp`, and the README now says so. No code changed.
+
 ## 0.1.0
 
 The first release. komadori steps a browser scene frame by frame, checks the frames and writes a contact sheet, a report and, if you ask, an mp4. It began as spryte's render tool and works with any page that exposes `window.__frame()`.

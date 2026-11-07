@@ -37,10 +37,10 @@ Does it make agents better at writing scenes? On four small tasks, sonnet did as
 `komadori-mcp` is komadori as three tool calls, so an agent can render, look and compare without touching files. `render` returns the checks and a contact sheet, `look` returns one frame at full size (or a zoomed crop of a region), and `diff` compares a frame with the same frame of the render before it, so "what did my change do?" is one call.
 
 ```json
-{ "mcpServers": { "komadori": { "command": "npx", "args": ["-y", "komadori-mcp"] } } }
+{ "mcpServers": { "komadori": { "command": "npx", "args": ["-y", "-p", "komadori", "komadori-mcp"] } } }
 ```
 
-Until komadori is on npm, point the command at a checkout instead: `"command": "node", "args": ["D:/komadori/bin/komadori-mcp.mjs"]`.
+`komadori-mcp` is a command inside the `komadori` package, which is why the config names the package with `-p`. To run it from a checkout instead: `"command": "node", "args": ["path/to/komadori/bin/komadori-mcp.mjs"]`.
 
 The three tool definitions are about 790 tokens counted as text. Claude Code lists MCP tools by name and loads their schemas on demand, so it carries about 140 of them up front (counted by comparing input tokens with and without the server, on claude-haiku-5-5). On spryte's 2x rain scene at 1080p, a 120-frame render takes about 5 s, and a crop or a diff about 1 s. Needs Chrome, and ffmpeg only if a render asks for a clip. It has no MCP dependency: the protocol subset it needs (initialize, tools/list, tools/call, ping) is about 100 lines, and the tests run it against the official SDK's client.
 

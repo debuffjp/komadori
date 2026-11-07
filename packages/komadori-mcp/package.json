@@ -1,0 +1,14 @@
+{
+  "name": "komadori-mcp",
+  "version": "0.1.0",
+  "description": "The komadori MCP server (render, look and diff for browser scenes), so that npx -y komadori-mcp works. The code is in the komadori package.",
+  "license": "MIT",
+  "type": "module",
+  "bin": { "komadori-mcp": "bin/komadori-mcp.mjs" },
+  "files": ["bin", "README.md", "LICENSE"],
+  "engines": { "node": ">=20" },
+  "dependencies": { "komadori": "^0.1.0" },
+  "homepage": "https://github.com/debuffjp/komadori#for-agents-an-mcp-server",
+  "bugs": { "url": "https://github.com/debuffjp/komadori/issues" },
+  "repository": { "type": "git", "url": "git+https://github.com/debuffjp/komadori.git", "directory": "packages/komadori-mcp" }
+}
