@@ -5,10 +5,12 @@
   "license": "MIT",
   "type": "module",
   "bin": {
-    "komadori": "bin/komadori.mjs"
+    "komadori": "bin/komadori.mjs",
+    "komadori-mcp": "bin/komadori-mcp.mjs"
   },
   "files": [
     "bin",
+    "src",
     "README.md",
     "LICENSE"
   ],
@@ -39,5 +41,8 @@
   "homepage": "https://github.com/debuffjp/komadori#readme",
   "bugs": {
     "url": "https://github.com/debuffjp/komadori/issues"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2"
   }
 }
