@@ -39,12 +39,13 @@ const runs = Number(opt("runs", 3));
 const arms = opt("arms", "A,B,C").split(",");
 const work = resolve(opt("work", join(tmpdir(), "komadori-eval")));
 const taskIds = opt("tasks", readdirSync(join(here, "tasks")).join(",")).split(",");
-if (!spryte || !existsSync(join(spryte, "packages/spryte/dist/index.js"))) {
-  console.error("--spryte must point at a debuff checkout with packages/spryte built (npm run build -w spryte).");
-  process.exit(2);
-}
+// The --agent check comes first: it is the one that stops a mistyped command from spending money.
 if (!["claude", "fake:solve", "fake:noop", "none"].includes(agentKind)) {
   console.error("--agent is required and must be claude (spends money), fake:solve or fake:noop. Nothing was run.");
+  process.exit(2);
+}
+if (!spryte || !existsSync(join(spryte, "packages/spryte/dist/index.js"))) {
+  console.error("--spryte must point at a debuff checkout with packages/spryte built (npm run build -w spryte).");
   process.exit(2);
 }
 const win = process.platform === "win32";
