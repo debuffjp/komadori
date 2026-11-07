@@ -16,7 +16,7 @@ On spryte's million-boid demo, one `draw.sprites` call carries 1,000,000 boids a
 
 ## Built for agents
 
-An agent writing a spryte scene needs two things: a small API to learn, and a way to check what it drew. spryte's whole [agent cheat sheet](https://github.com/debuffjp/debuff/blob/main/packages/spryte/docs/agent-cheatsheet.md) is one 7.7 KB page, about 3,200 tokens (counted), and komadori is the way to check: a contact sheet of the run, a few full-size frames, and checks that catch a blank, frozen or crashing scene before anyone looks. [docs/agent-guide.md](docs/agent-guide.md) has the loop.
+An agent writing a spryte scene needs two things: a small API to learn, and a way to check what it drew. spryte's whole [agent cheat sheet](https://github.com/debuffjp/debuff/blob/main/packages/spryte/docs/agent-cheatsheet.md) is one 7.7 KB page, about 3,350 tokens (counted), and komadori is the way to check: a contact sheet of the run, a few full-size frames, and checks that catch a blank, frozen or crashing scene before anyone looks. [docs/agent-guide.md](docs/agent-guide.md) has the loop.
 
 ## Fast clips: `--capture canvas`
 

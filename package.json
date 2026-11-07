@@ -1,6 +1,6 @@
 {
   "name": "komadori",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Steps a browser scene frame by frame, checks the frames, and writes a contact sheet, a report and an mp4. Made for spryte scenes, works with any canvas engine.",
   "license": "MIT",
   "type": "module",
@@ -11,11 +11,14 @@
   "files": [
     "bin",
     "src",
+    "docs",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "CHANGELOG.md"
   ],
   "scripts": {
-    "test": "node --test \"test/*.test.mjs\""
+    "test": "node --test \"test/*.test.mjs\"",
+    "prepublishOnly": "npm test"
   },
   "engines": {
     "node": ">=20"
