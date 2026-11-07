@@ -119,3 +119,13 @@ What this supports, and what it doesn't:
 - **The full-size frame is consistent with helping (3 of 3), and no more than that.** One of those three runs called `look`. The other two used only what `render` returned, which is the point of putting the frame there. Costs went up a little: $0.47 for the three runs against $0.40.
 
 So a harder task is still needed, one where the answer cannot be written without seeing it. This one was not.
+
+## The third task
+
+| Task | What the agent is asked | The hidden check |
+| --- | --- | --- |
+| `match-reference` | `reference.png` is how the scene should look and `scene.js` doesn't match it: make it match (colours, positions, sizes) | Render it and compare with the reference pixel by pixel: at most 3% of pixels differ visibly and the mean difference is 8/255 or less. A `scene.js` that refers to the reference image fails, since drawing it would match exactly |
+
+This is the task built to need looking. About twenty numbers differ between the start scene and the reference (the background and three shape colours, the ring's centre, radius and width, the disc's centre and radius, the dots' count, start, step and height, the title's height and size). A blind agent can read the picture and estimate them, but can't check, and a few pixels off in several places adds up. An agent that renders can compare its own frame with the reference and correct.
+
+The limits come from calibration, not from the results: a scene off by 3 px and 2 colour levels scores 2.0% changed and a mean of 4.8, one off by 10 to 20 px and 10% in size scores 7.2% and 17.2, the start scene 99.9% and 30.5, the target 0. The fake agents confirm the ends (noop fails, the target passes). No real agent has run it yet.

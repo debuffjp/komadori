@@ -12,7 +12,7 @@ import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, write
 import { homedir, tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { findColor, lumaStats, ringLuma } from "../../src/image.mjs";
+import { compare, findColor, lumaStats, ringLuma } from "../../src/image.mjs";
 import { render } from "../../src/render.mjs";
 import { parseTranscript } from "./transcript.mjs";
 
@@ -125,7 +125,7 @@ async function one(taskId, arm, n) {
     seen = parseTranscript(r.stdout);
     status = r.status;
   }
-  const verdict = await task.default({ dir, render, findColor, lumaStats, ringLuma });
+  const verdict = await task.default({ dir, render, findColor, lumaStats, ringLuma, compare });
   const t = seen.tools;
   return {
     task: taskId,
@@ -151,7 +151,7 @@ async function rescore(folder) {
     const m = /^(.+)-([ABC])-(\d+)$/.exec(name);
     if (!m || !existsSync(join(here, "tasks", m[1], "check.mjs"))) continue;
     const task = await import(pathToFileURL(join(here, "tasks", m[1], "check.mjs")));
-    const v = await task.default({ dir: join(folder, name), render, findColor, lumaStats, ringLuma });
+    const v = await task.default({ dir: join(folder, name), render, findColor, lumaStats, ringLuma, compare });
     console.log(`${name}: ${v.pass ? "PASS" : "FAIL"}${v.score === undefined ? "" : ` score ${v.score}`}`);
   }
 }

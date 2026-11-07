@@ -44,7 +44,7 @@ describe("eval harness", () => {
     assert.equal(t.cost, 0);
   });
 
-  for (const task of ["cut-off-title", "washed-out-title"]) {
+  for (const task of ["cut-off-title", "washed-out-title", "match-reference"]) {
     test(`an agent that changes nothing fails the ${task} check`, { skip: haveSpryte ? false : "set SPRYTE_CHECKOUT" }, () => {
       const r = fake("fake:noop", task);
       assert.equal(r.status, 0, r.stdout + r.stderr);
@@ -59,6 +59,19 @@ describe("eval harness", () => {
       assert.match(r.stdout, new RegExp(`${task} arm B run 1: PASS`));
     });
   }
+
+  test("match-reference refuses a scene that loads the reference image", { skip: haveSpryte ? false : "set SPRYTE_CHECKOUT" }, async () => {
+    const { mkdirSync, writeFileSync, cpSync } = await import("node:fs");
+    const dir = join(scratch, "cheat");
+    mkdirSync(dir, { recursive: true });
+    const task = fileURLToPath(new URL("../bench/eval/tasks/match-reference/", import.meta.url));
+    cpSync(join(task, "index.html"), join(dir, "index.html"));
+    writeFileSync(join(dir, "scene.js"), "// draws reference.png instead of the scene\nwindow.__frame = () => {};\n");
+    const check = (await import(`${new URL("../bench/eval/tasks/match-reference/check.mjs", import.meta.url).href}`)).default;
+    const v = await check({ dir, render: async () => ({ shots: [{ i: 0, png: "" }] }), compare: async () => ({ changed: 0, mean: 0 }) });
+    assert.equal(v.pass, false);
+    assert.match(v.detail, /refers to the reference image/);
+  });
 
   test("runs nothing, and spends nothing, when --agent is missing or an option is unknown", () => {
     const noAgent = spawnSync(process.execPath, [runner, "--spryte", spryte ?? scratch], { encoding: "utf8" });
