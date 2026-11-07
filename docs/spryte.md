@@ -1,6 +1,6 @@
-# Using komadori with spryte
+# Using Komadori with spryte
 
-komadori doesn't use any of spryte's code. It needs one thing from a spryte page, the function `window.__frame()`.
+Komadori doesn't use any of spryte's code. It needs one thing from a spryte page, the function `window.__frame()`.
 
 ## Add a stepped mode
 
@@ -19,7 +19,7 @@ if (new URLSearchParams(location.search).has("capture")) {
 }
 ```
 
-Then point komadori at it:
+Then point Komadori at it:
 
 ```bash
 npx komadori dist --query "capture=1" --frames 600 --size 1920x1080
@@ -44,4 +44,4 @@ A target sprite is drawn at its pixel size in logical units. Without the third s
 
 ## The cheat sheet
 
-spryte has a one-page cheat sheet for agents, [agent-cheatsheet.md](https://github.com/debuffjp/debuff/blob/main/packages/spryte/docs/agent-cheatsheet.md). It is about 3,350 tokens, counted with claude-haiku-5-5 by comparing input tokens with and without it.
+spryte has a one-page cheat sheet for agents, [agent-cheatsheet.md](https://github.com/debuffjp/debuff/blob/main/packages/spryte/docs/agent-cheatsheet.md). It is about 3,150 tokens, counted with claude-haiku-5-5 by comparing input tokens with and without it.

@@ -1,6 +1,6 @@
 # Golden frames
 
-Golden frames let a run fail on how a scene looks, not only on a crash. This page explains what komadori compares and why the limits are what they are.
+Golden frames let a run fail on how a scene looks, not only on a crash. This page explains what Komadori compares and why the limits are what they are.
 
 ## The commands
 
@@ -14,9 +14,9 @@ npx komadori dist --frames 120 --samples 5 --size 1280x720 --golden golden
 
 A scene stays the same from run to run if it moves by a fixed step of 1/60 second per frame, seeds its randomness, and doesn't read the real clock.
 
-A later run with `--golden` compares each sampled frame. A frame that differs too much is reported with its number, the share of pixels that changed, and the changed region. komadori writes `golden-diff-0042.png` to the `--out` folder for it, showing the golden frame, the new frame and the difference side by side.
+A later run with `--golden` compares each sampled frame. A frame that differs too much is reported with its number, the share of pixels that changed, and the changed region. Komadori writes `golden-diff-0042.png` to the `--out` folder for it, showing the golden frame, the new frame and the difference side by side.
 
-If the settings differ from the ones the golden frames were made with (size, frame count, which frames, or the query), komadori says so and doesn't compare.
+If the settings differ from the ones the golden frames were made with (size, frame count, which frames, or the query), Komadori says so and doesn't compare.
 
 `approve` refuses to replace golden frames that already exist unless you pass `--yes`. Look at the new frames first, because replacing them changes what every later run is compared with.
 
@@ -31,7 +31,7 @@ A frame passes when few pixels differ and the average difference is small. A pix
 
 These come from measurement. On spryte's rain and warp scenes at 1080p, two runs on the same renderer differed by exactly 0. A Radeon 780M, an RTX 5060 Laptop (both on Direct3D) and Vulkan SwiftShader gave frames that differed by at most a mean of 0.153 out of 255 and 0.057% of pixels. The limit for another renderer is three to four times that.
 
-When the golden frames were made on a different renderer, komadori uses the looser limits and prints a warning that says which two renderers it compared.
+When the golden frames were made on a different renderer, Komadori uses the looser limits and prints a warning that says which two renderers it compared.
 
 `--golden-tolerance 5` lets 5% of the pixels differ. The mean limit rises with it, to 12.75 out of 255 in that case.
 

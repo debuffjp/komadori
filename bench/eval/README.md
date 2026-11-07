@@ -1,10 +1,10 @@
 # Does it help an agent?
 
-komadori and spryte's cheat sheet claim to make an agent better at writing scenes. This measures it: the same task under three arms, with a hidden check that decides whether the result is right.
+Komadori and spryte's cheat sheet claim to make an agent better at writing scenes. This measures it: the same task under three arms, with a hidden check that decides whether the result is right.
 
 | Arm | The agent gets | Can render? |
 | --- | --- | --- |
-| A | the cheat sheet and the komadori tools (render, look, diff) | yes |
+| A | the cheat sheet and the Komadori tools (render, look, diff) | yes |
 | B | the cheat sheet | no |
 | C | the spryte API reference, and no cheat sheet | no |
 
@@ -34,11 +34,11 @@ More tasks go in `tasks/<id>/` with `prompt.md`, the start files, `check.mjs` (e
 
 | Arm | Passed | Median turns | Median cost | Median renders |
 | --- | --- | --- | --- | --- |
-| A: sheet + komadori tools | 3/3 | 16 | $0.161 | 4 |
+| A: sheet + Komadori tools | 3/3 | 16 | $0.161 | 4 |
 | B: sheet only | 3/3 | 6 | $0.084 | 0 |
 | C: API reference only | 3/3 | 6 | $0.104 | 0 |
 
-The agents that couldn't render didn't guess a font size. They called spryte's `draw.measure` to size the title at load time (B found it in the cheat sheet, C in the API reference), so the answer was computable without looking. On this task, then, the komadori tools only added cost: arm A took about 2.7 times the turns of B and about twice the money, with the same result. Three runs per cell show a direction at best, and here the direction is that a task with a computable answer doesn't need to see. It says nothing about tasks where looking is the only way to know. The next tasks have to be ones like that: stripes, overlap, a colour that looks wrong, a draw-order or blend bug that the code doesn't make obvious.
+The agents that couldn't render didn't guess a font size. They called spryte's `draw.measure` to size the title at load time (B found it in the cheat sheet, C in the API reference), so the answer was computable without looking. On this task, then, the Komadori tools only added cost: arm A took about 2.7 times the turns of B and about twice the money, with the same result. Three runs per cell show a direction at best, and here the direction is that a task with a computable answer doesn't need to see. It says nothing about tasks where looking is the only way to know. The next tasks have to be ones like that: stripes, overlap, a colour that looks wrong, a draw-order or blend bug that the code doesn't make obvious.
 
 > **Correction (2026-11-07).** The `washed-out-title` tables further down were scored with a check that gave false failures, and the reading of them ("arm A does worse than B") was wrong. See "Correction: the check was wrong" at the end. They are left in so the record stays honest.
 
@@ -54,7 +54,7 @@ The answer isn't in the code in a form you can read off. The light's path is a l
 
 | Arm | Passed | Median turns | Median cost | Median renders | Looks, diffs |
 | --- | --- | --- | --- | --- | --- |
-| A: sheet + komadori tools | 0/3 | 9 | $0.120 | 2 | 0, 0 |
+| A: sheet + Komadori tools | 0/3 | 9 | $0.120 | 2 | 0, 0 |
 | B: sheet only | 1/3 | 6 | $0.090 | 0 | |
 | C: API reference only | 0/3 | 8 | $0.095 | 0 | |
 
@@ -76,7 +76,7 @@ With the first batch scored the same way (`--rescore`), `washed-out-title` stand
 
 | Arm | Pass | Scores (lower is better; the unfixed scene is 180) |
 | --- | --- | --- |
-| A: sheet + komadori tools | 0/6 | 138.8, 172.4, 160.5, 173.2, 173.4, 173.4 |
+| A: sheet + Komadori tools | 0/6 | 138.8, 172.4, 160.5, 173.2, 173.4, 173.4 |
 | B: sheet only | 2/4 | 170.4, 121.3, 138.4, 129.9 |
 | C: API reference only | 0/3 | 173.2, 154.7, 161.5 |
 
@@ -104,7 +104,7 @@ The check now measures what a reader compares the letters with: the ring of back
 
 | Condition | Pass | Scores (lower is better; the unfixed scene is 216) |
 | --- | --- | --- |
-| A: sheet + komadori tools, no nudge (both batches) | 3/6 | 54.9, 59.1, 127.4, 175.3, 188.5, 193.6 |
+| A: sheet + Komadori tools, no nudge (both batches) | 3/6 | 54.9, 59.1, 127.4, 175.3, 188.5, 193.6 |
 | B: sheet only | 4/4 | 39, 45.2, 50.1, 54.9 |
 | C: API reference only | 2/3 | 77, 96.2, 177.6 |
 | A + zoom nudge | 2/3 | 54.9, 88, 161.2 |
@@ -136,7 +136,7 @@ The limits come from calibration, not from the results: a scene off by 3 px and 
 
 | Arm | Passed | Pixels visibly different (lower is better) | Median turns | Median cost | Renders |
 | --- | --- | --- | --- | --- | --- |
-| A: sheet + komadori tools | 3/3 | 1.23, 1.02, 0.42 | 6 | $0.089 | 0, 0, 3 |
+| A: sheet + Komadori tools | 3/3 | 1.23, 1.02, 0.42 | 6 | $0.089 | 0, 0, 3 |
 | B: sheet only | 3/3 | 0.69, 1.07, 0.26 | 6 | $0.089 | 0 |
 | C: API reference only | 3/3 | 1.36, 1.36, 1.55 | 6 | $0.110 | 0 |
 
@@ -144,17 +144,17 @@ The agents read the picture, estimated about twenty numbers and got them right t
 
 ## Where this leaves the question
 
-Three tasks, 27 real runs plus the unplanned ones, about $5.20 of agent runs, and no task on which the komadori tools made an agent's result better. What the runs do support:
+Three tasks, 27 real runs plus the unplanned ones, about $5.20 of agent runs, and no task on which the Komadori tools made an agent's result better. What the runs do support:
 
 - Sonnet with spryte's cheat sheet or API reference writes simple scenes correctly without seeing them, and estimates a picture's layout from the image well. For that, the tools are not needed, and when used they cost more (arm A's median was $0.16 against $0.09 on `washed-out-title`).
 - A contact sheet alone invites false confidence about detail. A full-size frame in the result looked at least as good, 3 of 3, which is a result for `render`'s design, not for the tools.
 - The tools may matter where these toy tasks don't reach: a page that fails, freezes or throws (which the checks catch whether or not an agent looks), a long clip made quickly, and a human who wants a sheet to look at. None of that was tested here.
 
-So "komadori makes agents better at scenes" is not shown. Don't claim it. A task that needs looking and that the model cannot estimate its way through (a bug visible only in the output, such as a shader that renders wrong) would test it properly.
+So "Komadori makes agents better at scenes" is not shown. Don't claim it. A task that needs looking and that the model cannot estimate its way through (a bug visible only in the output, such as a shader that renders wrong) would test it properly.
 
 ### Results: `broken-shader`, arm A only
 
-**2026-11-07, sonnet, arm A (cheat sheet + komadori tools), 3 runs, $0.32 in all.** All three passed.
+**2026-11-07, sonnet, arm A (cheat sheet + Komadori tools), 3 runs, $0.32 in all.** All three passed.
 
 | Run | Pass | Turns | Cost | Renders | Edits |
 | --- | --- | --- | --- | --- | --- |
@@ -162,19 +162,19 @@ So "komadori makes agents better at scenes" is not shown. Don't claim it. A task
 | A-2 | pass | 8 | $0.110 | 2 | 1 |
 | A-3 | pass | 9 | $0.107 | 3 | 1 |
 
-The scene has three shader bugs (a reserved word as a variable name, a type mismatch, a `smoothstep` call missing an argument). komadori reports the first compile error with its line and source line (`'sample' : Illegal use of reserved word | float sample = length(p);`), and each agent fixed all three bugs in one edit, after one or two renders, and checked with a render afterwards. That meets the plan's acceptance test for shader errors: given komadori's output, an agent fixes the broken shaders in a single edit.
+The scene has three shader bugs (a reserved word as a variable name, a type mismatch, a `smoothstep` call missing an argument). Komadori reports the first compile error with its line and source line (`'sample' : Illegal use of reserved word | float sample = length(p);`), and each agent fixed all three bugs in one edit, after one or two renders, and checked with a render afterwards. That meets the plan's acceptance test for shader errors: given Komadori's output, an agent fixes the broken shaders in a single edit.
 
-It does not show that komadori was needed (arm B has since run: see below). Arms B and C were not run on this task when this was written, and a model that knows GLSL may find all three bugs by reading `scene.js` (the compiler stops at the first syntax error, so komadori shows the bugs one at a time, and the agents found the other two themselves). Until B has run, the honest claim is that komadori's shader error output is sufficient, not that it is better than reading. No agent called `look` or `diff`.
+It does not show that Komadori was needed (arm B has since run: see below). Arms B and C were not run on this task when this was written, and a model that knows GLSL may find all three bugs by reading `scene.js` (the compiler stops at the first syntax error, so Komadori shows the bugs one at a time, and the agents found the other two themselves). Until B has run, the honest claim is that Komadori's shader error output is sufficient, not that it is better than reading. No agent called `look` or `diff`.
 
 ### Results: `broken-shader`, arm B
 
 **Same task, arm B (cheat sheet only, no rendering), 3 runs, $0.23 in all.** All three passed, in 4 to 5 turns (median 5) at $0.072 to $0.079 a run, against arm A's 8 to 9 turns (median 8) and $0.106 to $0.110.
 
-The agents found all three bugs by reading `scene.js` and fixed them in one edit, and said so honestly ("I haven't run the page, so the fix is untested"). So komadori's shader error output was enough on this task and was not needed: the agents with it took about 1.7 times the turns and 1.4 times the money for the same result.
+The agents found all three bugs by reading `scene.js` and fixed them in one edit, and said so honestly ("I haven't run the page, so the fix is untested"). So Komadori's shader error output was enough on this task and was not needed: the agents with it took about 1.7 times the turns and 1.4 times the money for the same result.
 
 ## The verdict so far
 
-Four tasks, about $5.75 of agent runs, and on none of them did the komadori tools make sonnet's result better:
+Four tasks, about $5.75 of agent runs, and on none of them did the Komadori tools make sonnet's result better:
 
 | Task | Arm A (tools) | Arm B (sheet only) | Arm C (API only) |
 | --- | --- | --- | --- |

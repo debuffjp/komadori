@@ -1,6 +1,6 @@
-# Using komadori as an agent
+# Using Komadori as an agent
 
-You can't watch a scene run. komadori gives you the next best thing: a few dozen frames laid out on one sheet, and a handful of checks that catch the worst failures before you look.
+You can't watch a scene run. Komadori gives you the next best thing: a few dozen frames laid out on one sheet, and a handful of checks that catch the worst failures before you look.
 
 ## The loop
 

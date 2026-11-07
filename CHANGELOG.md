@@ -10,7 +10,7 @@ The README's MCP config was wrong. It said `npx -y komadori-mcp`, but `komadori-
 
 ## 0.1.0
 
-The first release. komadori steps a browser scene frame by frame, checks the frames and writes a contact sheet, a report and, if you ask, an mp4. It began as spryte's render tool and works with any page that exposes `window.__frame()`.
+The first release. Komadori steps a browser scene frame by frame, checks the frames and writes a contact sheet, a report and, if you ask, an mp4. It began as spryte's render tool and works with any page that exposes `window.__frame()`.
 
 - Checks for a broken page, a shader that fails to compile (with the line of your own source, the compiler's message and the line itself), a blank or frozen scene, and content cut off at an edge.
 - `--capture canvas` encodes the canvas in the page with WebCodecs: about 3 to 3.6 times faster clips than screenshots, with only the canvas in the picture.
