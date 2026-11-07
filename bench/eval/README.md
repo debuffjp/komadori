@@ -151,3 +151,17 @@ Three tasks, 27 real runs plus the unplanned ones, about $5.20 of agent runs, an
 - The tools may matter where these toy tasks don't reach: a page that fails, freezes or throws (which the checks catch whether or not an agent looks), a long clip made quickly, and a human who wants a sheet to look at. None of that was tested here.
 
 So "komadori makes agents better at scenes" is not shown. Don't claim it. A task that needs looking and that the model cannot estimate its way through (a bug visible only in the output, such as a shader that renders wrong) would test it properly.
+
+### Results: `broken-shader`, arm A only
+
+**2026-11-07, sonnet, arm A (cheat sheet + komadori tools), 3 runs, $0.32 in all.** All three passed.
+
+| Run | Pass | Turns | Cost | Renders | Edits |
+| --- | --- | --- | --- | --- | --- |
+| A-1 | pass | 8 | $0.106 | 3 | 1 |
+| A-2 | pass | 8 | $0.110 | 2 | 1 |
+| A-3 | pass | 9 | $0.107 | 3 | 1 |
+
+The scene has three shader bugs (a reserved word as a variable name, a type mismatch, a `smoothstep` call missing an argument). komadori reports the first compile error with its line and source line (`'sample' : Illegal use of reserved word | float sample = length(p);`), and each agent fixed all three bugs in one edit, after one or two renders, and checked with a render afterwards. That meets the plan's acceptance test for shader errors: given komadori's output, an agent fixes the broken shaders in a single edit.
+
+It does not show that komadori was needed. Arms B and C were not run on this task, and a model that knows GLSL may find all three bugs by reading `scene.js` (the compiler stops at the first syntax error, so komadori shows the bugs one at a time, and the agents found the other two themselves). Until B has run, the honest claim is that komadori's shader error output is sufficient, not that it is better than reading. No agent called `look` or `diff`.
