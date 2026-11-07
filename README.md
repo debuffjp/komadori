@@ -8,6 +8,8 @@ It works with any canvas engine. The page only has to expose `window.__frame()`:
 npx komadori dist --frames 600 --samples 20 --size 1920x1080 --out render --mp4 render/clip.mp4
 ```
 
+Using it as an agent, and how to give a page a `window.__frame()`: [docs/agent-guide.md](docs/agent-guide.md).
+
 ## What it checks
 
 A broken page, a blank or frozen scene, and content cut off at the edge. It can't see stripes or unreadable text: look at `contact-sheet.png` for those.
