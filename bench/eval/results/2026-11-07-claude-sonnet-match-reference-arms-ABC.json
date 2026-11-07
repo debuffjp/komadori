@@ -1,0 +1,198 @@
+{
+  "date": "2026-11-07T09:59:28.097Z",
+  "agent": "claude",
+  "model": "sonnet",
+  "budget": "2",
+  "runs": 3,
+  "results": [
+    {
+      "task": "match-reference",
+      "arm": "A",
+      "run": 1,
+      "pass": true,
+      "detail": "1.23% of pixels differ visibly from the reference (needs 3% or less), mean difference 2.37/255 (needs 8 or less)",
+      "score": 1.23,
+      "turns": 6,
+      "cost": 0.0886,
+      "tokens": {
+        "input": 8,
+        "output": 1581,
+        "cacheRead": 155411,
+        "cacheWrite": 14310
+      },
+      "renders": 0,
+      "looks": 0,
+      "diffs": 0,
+      "seconds": 32.8,
+      "status": 0
+    },
+    {
+      "task": "match-reference",
+      "arm": "A",
+      "run": 2,
+      "pass": true,
+      "detail": "1.02% of pixels differ visibly from the reference (needs 3% or less), mean difference 1.42/255 (needs 8 or less)",
+      "score": 1.02,
+      "turns": 6,
+      "cost": 0.0876,
+      "tokens": {
+        "input": 8,
+        "output": 1502,
+        "cacheRead": 155353,
+        "cacheWrite": 14257
+      },
+      "renders": 0,
+      "looks": 0,
+      "diffs": 0,
+      "seconds": 36.2,
+      "status": 0
+    },
+    {
+      "task": "match-reference",
+      "arm": "A",
+      "run": 3,
+      "pass": true,
+      "detail": "0.42% of pixels differ visibly from the reference (needs 3% or less), mean difference 1.17/255 (needs 8 or less)",
+      "score": 0.42,
+      "turns": 10,
+      "cost": 0.1187,
+      "tokens": {
+        "input": 14,
+        "output": 2015,
+        "cacheRead": 290805,
+        "cacheWrite": 17358
+      },
+      "renders": 3,
+      "looks": 0,
+      "diffs": 0,
+      "seconds": 37.2,
+      "status": 0
+    },
+    {
+      "task": "match-reference",
+      "arm": "B",
+      "run": 1,
+      "pass": true,
+      "detail": "0.69% of pixels differ visibly from the reference (needs 3% or less), mean difference 1.21/255 (needs 8 or less)",
+      "score": 0.69,
+      "turns": 6,
+      "cost": 0.0886,
+      "tokens": {
+        "input": 8,
+        "output": 1633,
+        "cacheRead": 154877,
+        "cacheWrite": 14195
+      },
+      "renders": 0,
+      "looks": 0,
+      "diffs": 0,
+      "seconds": 23.1,
+      "status": 0
+    },
+    {
+      "task": "match-reference",
+      "arm": "B",
+      "run": 2,
+      "pass": true,
+      "detail": "1.07% of pixels differ visibly from the reference (needs 3% or less), mean difference 1.49/255 (needs 8 or less)",
+      "score": 1.07,
+      "turns": 6,
+      "cost": 0.0886,
+      "tokens": {
+        "input": 8,
+        "output": 1654,
+        "cacheRead": 154855,
+        "cacheWrite": 14144
+      },
+      "renders": 0,
+      "looks": 0,
+      "diffs": 0,
+      "seconds": 23.6,
+      "status": 0
+    },
+    {
+      "task": "match-reference",
+      "arm": "B",
+      "run": 3,
+      "pass": true,
+      "detail": "0.26% of pixels differ visibly from the reference (needs 3% or less), mean difference 0.32/255 (needs 8 or less)",
+      "score": 0.26,
+      "turns": 6,
+      "cost": 0.089,
+      "tokens": {
+        "input": 8,
+        "output": 1662,
+        "cacheRead": 154928,
+        "cacheWrite": 14207
+      },
+      "renders": 0,
+      "looks": 0,
+      "diffs": 0,
+      "seconds": 23,
+      "status": 0
+    },
+    {
+      "task": "match-reference",
+      "arm": "C",
+      "run": 1,
+      "pass": true,
+      "detail": "1.36% of pixels differ visibly from the reference (needs 3% or less), mean difference 2.40/255 (needs 8 or less)",
+      "score": 1.36,
+      "turns": 6,
+      "cost": 0.1101,
+      "tokens": {
+        "input": 8,
+        "output": 1577,
+        "cacheRead": 162513,
+        "cacheWrite": 19524
+      },
+      "renders": 0,
+      "looks": 0,
+      "diffs": 0,
+      "seconds": 21.7,
+      "status": 0
+    },
+    {
+      "task": "match-reference",
+      "arm": "C",
+      "run": 2,
+      "pass": true,
+      "detail": "1.36% of pixels differ visibly from the reference (needs 3% or less), mean difference 3.00/255 (needs 8 or less)",
+      "score": 1.36,
+      "turns": 6,
+      "cost": 0.1093,
+      "tokens": {
+        "input": 8,
+        "output": 1506,
+        "cacheRead": 162489,
+        "cacheWrite": 19501
+      },
+      "renders": 0,
+      "looks": 0,
+      "diffs": 0,
+      "seconds": 21.5,
+      "status": 0
+    },
+    {
+      "task": "match-reference",
+      "arm": "C",
+      "run": 3,
+      "pass": true,
+      "detail": "1.55% of pixels differ visibly from the reference (needs 3% or less), mean difference 3.01/255 (needs 8 or less)",
+      "score": 1.55,
+      "turns": 6,
+      "cost": 0.1096,
+      "tokens": {
+        "input": 8,
+        "output": 1528,
+        "cacheRead": 162496,
+        "cacheWrite": 19511
+      },
+      "renders": 0,
+      "looks": 0,
+      "diffs": 0,
+      "seconds": 22.4,
+      "status": 0
+    }
+  ]
+}

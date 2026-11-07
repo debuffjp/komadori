@@ -129,3 +129,25 @@ So a harder task is still needed, one where the answer cannot be written without
 This is the task built to need looking. About twenty numbers differ between the start scene and the reference (the background and three shape colours, the ring's centre, radius and width, the disc's centre and radius, the dots' count, start, step and height, the title's height and size). A blind agent can read the picture and estimate them, but can't check, and a few pixels off in several places adds up. An agent that renders can compare its own frame with the reference and correct.
 
 The limits come from calibration, not from the results: a scene off by 3 px and 2 colour levels scores 2.0% changed and a mean of 4.8, one off by 10 to 20 px and 10% in size scores 7.2% and 17.2, the start scene 99.9% and 30.5, the target 0. The fake agents confirm the ends (noop fails, the target passes). No real agent has run it yet.
+
+### Results: `match-reference`
+
+**2026-11-07, sonnet, 3 runs per arm (9 runs, $0.89 in all).** Every run passed, in every arm.
+
+| Arm | Passed | Pixels visibly different (lower is better) | Median turns | Median cost | Renders |
+| --- | --- | --- | --- | --- | --- |
+| A: sheet + komadori tools | 3/3 | 1.23, 1.02, 0.42 | 6 | $0.089 | 0, 0, 3 |
+| B: sheet only | 3/3 | 0.69, 1.07, 0.26 | 6 | $0.089 | 0 |
+| C: API reference only | 3/3 | 1.36, 1.36, 1.55 | 6 | $0.110 | 0 |
+
+The agents read the picture, estimated about twenty numbers and got them right to within a few pixels, in six turns, without ever rendering. Arm A rendered in one run of three and called neither `look` nor `diff`. All nine scenes beat the "off by 3 px and 2 colour levels" calibration point (2.0%), so the 3% limit was too loose to separate anything. I did not tighten it afterwards to get a difference. The graded scores are the thing to read: A averages 0.89%, B 0.67% and C 1.42%. That hints that the cheat sheet helps more than the API reference alone, but with three runs a cell it is a hint.
+
+## Where this leaves the question
+
+Three tasks, 27 real runs plus the unplanned ones, about $5.20 of agent runs, and no task on which the komadori tools made an agent's result better. What the runs do support:
+
+- Sonnet with spryte's cheat sheet or API reference writes simple scenes correctly without seeing them, and estimates a picture's layout from the image well. For that, the tools are not needed, and when used they cost more (arm A's median was $0.16 against $0.09 on `washed-out-title`).
+- A contact sheet alone invites false confidence about detail. A full-size frame in the result looked at least as good, 3 of 3, which is a result for `render`'s design, not for the tools.
+- The tools may matter where these toy tasks don't reach: a page that fails, freezes or throws (which the checks catch whether or not an agent looks), a long clip made quickly, and a human who wants a sheet to look at. None of that was tested here.
+
+So "komadori makes agents better at scenes" is not shown. Don't claim it. A task that needs looking and that the model cannot estimate its way through (a bug visible only in the output, such as a shader that renders wrong) would test it properly.
