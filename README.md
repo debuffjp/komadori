@@ -52,10 +52,10 @@ npx komadori dist --frames 120 --samples 5 --size 1280x720 --golden golden
 komadori also runs as an MCP server with three tools. `render` returns the checks and a contact sheet. `look` returns one frame at full size, or a zoomed crop. `diff` compares a frame with the same frame from the render before it.
 
 ```json
-{ "mcpServers": { "komadori": { "command": "npx", "args": ["-y", "-p", "komadori", "komadori-mcp"] } } }
+{ "mcpServers": { "komadori": { "command": "npx", "args": ["-y", "komadori", "mcp"] } } }
 ```
 
-The server is a command inside the `komadori` package, which is why the config names the package with `-p`.
+`komadori mcp` starts the server and talks to the client on stdin and stdout. The older `komadori-mcp` command does the same thing and still works.
 
 Does this help an agent write better scenes? On four small tasks, Sonnet did as well without rendering anything. The runs and their costs are in [bench/eval](bench/eval/README.md).
 

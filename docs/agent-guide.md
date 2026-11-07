@@ -12,7 +12,7 @@ You can't watch a scene run. komadori gives you the next best thing: a few dozen
 
 ## The same loop as tool calls
 
-With `komadori-mcp` the steps above are tool calls, with the images in the result:
+With `komadori mcp` the steps above are tool calls, with the images in the result:
 
 1. `render` with `target` (a built folder or URL) and `query` if the page has a stepped mode. Read the checks, look at the contact sheet.
 2. `look` with a `frame`, and `x`, `y`, `w`, `h`, `zoom` to see detail: text, stripes, an edge.

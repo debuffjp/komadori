@@ -1,5 +1,6 @@
 // The MCP server, driven by the official SDK's client over stdio: if that client can use it, it speaks MCP.
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { after, before, describe, test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
@@ -111,5 +112,34 @@ describe("komadori-mcp", () => {
     const d = await call("diff", { frame: 29 });
     assert.equal(d.isError, true);
     assert.match(textOf(d), /different sizes/);
+  });
+});
+
+describe("komadori mcp, the subcommand", () => {
+  const cli = fileURLToPath(new URL("../bin/komadori.mjs", import.meta.url));
+
+  test("starts the same server", async () => {
+    const c = new Client({ name: "komadori-test-subcommand", version: "0.0.0" });
+    await c.connect(new StdioClientTransport({ command: process.execPath, args: [cli, "mcp"], stderr: "pipe" }));
+    try {
+      assert.equal(c.getServerVersion().name, "komadori");
+      const { tools } = await c.listTools();
+      assert.deepEqual(tools.map((t) => t.name).sort(), ["diff", "look", "render"]);
+    } finally {
+      await c.close();
+    }
+  });
+
+  test("writes nothing to stdout except one JSON message per line", () => {
+    const messages = [
+      { jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "t", version: "0" } } },
+      { jsonrpc: "2.0", id: 2, method: "tools/list" },
+    ];
+    const input = `${messages.map((m) => JSON.stringify(m)).join(String.fromCharCode(10))}${String.fromCharCode(10)}`;
+    const r = spawnSync(process.execPath, [cli, "mcp"], { input, encoding: "utf8", timeout: 60_000 });
+    assert.equal(r.status, 0, r.stderr);
+    const lines = r.stdout.split(String.fromCharCode(10)).filter(Boolean);
+    assert.equal(lines.length, 2);
+    for (const line of lines) assert.doesNotThrow(() => JSON.parse(line), line);
   });
 });

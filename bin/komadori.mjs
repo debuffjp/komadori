@@ -11,10 +11,19 @@ import { readFile } from "node:fs/promises";
 import { approve, determinism } from "../src/golden-cli.mjs";
 import { render, UsageError } from "../src/render.mjs";
 
+// `komadori mcp` is the MCP server. It runs before anything else, because the server owns stdout: a usage line or a
+// log line printed here would break the client's parsing.
+if (process.argv[2] === "mcp") {
+  const { serve } = await import("../src/mcp-stdio.mjs");
+  await serve();
+  process.exit(0);
+}
+
 let args = process.argv.slice(2);
 const USAGE = `usage: komadori <dist-dir | url> [options]
        komadori approve <dist-dir | url> [options]       save the sampled frames as golden frames
        komadori determinism <dist-dir | url> [options]   render twice, say whether the frames match
+       komadori mcp                                      run as an MCP server on stdio (render, look, diff)
   --frames n       frames to step (default 120)
   --size WxH       viewport (default 1280x720)
   --samples n      frames kept for the checks and the contact sheet (default 20)
