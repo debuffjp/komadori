@@ -16,7 +16,7 @@ On spryte's million-boid demo, one `draw.sprites` call carries 1,000,000 boids a
 
 ## Built for agents
 
-An agent writing a spryte scene needs two things: a small API to learn, and a way to see what it drew. spryte's whole [agent cheat sheet](https://github.com/debuffjp/debuff/blob/main/packages/spryte/docs/agent-cheatsheet.md) is one 7.7 KB page, and komadori is the way to see: a contact sheet of the run, a few full-size frames, and checks that catch a blank, frozen or crashing scene before anyone looks. [docs/agent-guide.md](docs/agent-guide.md) has the loop.
+An agent writing a spryte scene needs two things: a small API to learn, and a way to see what it drew. spryte's whole [agent cheat sheet](https://github.com/debuffjp/debuff/blob/main/packages/spryte/docs/agent-cheatsheet.md) is one 7.7 KB page, about 3,200 tokens (counted), and komadori is the way to see: a contact sheet of the run, a few full-size frames, and checks that catch a blank, frozen or crashing scene before anyone looks. [docs/agent-guide.md](docs/agent-guide.md) has the loop.
 
 ## Fast clips: `--capture canvas`
 
@@ -40,7 +40,7 @@ The clip is the canvas's pixels at its backing size. HTML drawn over the canvas 
 
 Until komadori is on npm, point the command at a checkout instead: `"command": "node", "args": ["D:/komadori/bin/komadori-mcp.mjs"]`.
 
-The three tool definitions come to about 2,200 characters (roughly 540 tokens, estimated at 4 characters a token, not counted). On spryte's 2x rain scene at 1080p, a 120-frame render takes about 5 s, and a crop or a diff about 1 s. Needs Chrome, and ffmpeg only if a render asks for a clip. It has no MCP dependency: the protocol subset it needs (initialize, tools/list, tools/call, ping) is about 100 lines, and the tests run it against the official SDK's client.
+The three tool definitions are about 790 tokens counted as text. Claude Code lists MCP tools by name and loads their schemas on demand, so it carries about 140 of them up front (counted by comparing input tokens with and without the server, on claude-haiku-5-5). On spryte's 2x rain scene at 1080p, a 120-frame render takes about 5 s, and a crop or a diff about 1 s. Needs Chrome, and ffmpeg only if a render asks for a clip. It has no MCP dependency: the protocol subset it needs (initialize, tools/list, tools/call, ping) is about 100 lines, and the tests run it against the official SDK's client.
 
 ## With spryte
 
