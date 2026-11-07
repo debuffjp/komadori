@@ -39,3 +39,11 @@ More tasks go in `tasks/<id>/` with `prompt.md`, the start files, `check.mjs` (e
 | C: API reference only | 3/3 | 6 | $0.104 | 0 |
 
 The agents that couldn't render didn't guess a font size. They called spryte's `draw.measure` to size the title at load time (B found it in the cheat sheet, C in the API reference), so the answer was computable without looking. On this task, then, the komadori tools only added cost: arm A took about 2.7 times the turns of B and about twice the money, with the same result. Three runs per cell show a direction at best, and here the direction is that a task with a computable answer doesn't need to see. It says nothing about tasks where looking is the only way to know. The next tasks have to be ones like that: stripes, overlap, a colour that looks wrong, a draw-order or blend bug that the code doesn't make obvious.
+
+## The second task
+
+| Task | What the agent is asked | The hidden check |
+| --- | --- | --- |
+| `washed-out-title` | A bright light drifts behind a white title and washes it out for part of the loop: make the title readable, don't change how it looks, and keep the light as bright and as roaming as it is | Render a full 240-frame loop and look at 16 frames: the background around the letters stays dark enough (90th percentile of luma, 135 or less, about 3.6:1 contrast), the white title is intact, and the light still lights up a large area below it (about 70% of the original's 16,000 pixels) |
+
+The answer isn't in the code in a form you can read off. The light's path is a loop built from sines, so when and where it crosses the title takes either a hand simulation or a look: in the unfixed scene frames 48 to 112 are bad and the rest are fine. The reference fix moves the loop down 90 px and passes at 119, so it clears the 135 limit with a margin of 16. Dimming the light or putting a dark plate behind the title is ruled out by the prompt and the check.

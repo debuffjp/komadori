@@ -16,8 +16,8 @@ const haveSpryte = spryte && existsSync(join(spryte, "packages/spryte/dist/index
 const scratch = mkdtempSync(join(tmpdir(), "komadori-eval-test-"));
 after(() => rmSync(scratch, { recursive: true, force: true }));
 
-function fake(kind) {
-  return spawnSync(process.execPath, [runner, "--spryte", spryte, "--agent", kind, "--arms", "B", "--runs", "1", "--work", join(scratch, kind.replace(":", "-"))], {
+function fake(kind, task) {
+  return spawnSync(process.execPath, [runner, "--spryte", spryte, "--agent", kind, "--tasks", task, "--arms", "B", "--runs", "1", "--work", join(scratch, `${task}-${kind.replace(":", "-")}`)], {
     encoding: "utf8",
     timeout: 180_000,
   });
@@ -44,19 +44,21 @@ describe("eval harness", () => {
     assert.equal(t.cost, 0);
   });
 
-  test("an agent that changes nothing fails the cut-off-title check", { skip: haveSpryte ? false : "set SPRYTE_CHECKOUT" }, () => {
-    const r = fake("fake:noop");
-    assert.equal(r.status, 0, r.stdout + r.stderr);
-    assert.match(r.stdout, /cut-off-title arm B run 1: FAIL/);
-    const results = JSON.parse(readFileSync(/results: (.*)/.exec(r.stdout)[1], "utf8"));
-    assert.equal(results.results[0].pass, false);
-  });
+  for (const task of ["cut-off-title", "washed-out-title"]) {
+    test(`an agent that changes nothing fails the ${task} check`, { skip: haveSpryte ? false : "set SPRYTE_CHECKOUT" }, () => {
+      const r = fake("fake:noop", task);
+      assert.equal(r.status, 0, r.stdout + r.stderr);
+      assert.match(r.stdout, new RegExp(`${task} arm B run 1: FAIL`));
+      const results = JSON.parse(readFileSync(/results: (.*)/.exec(r.stdout)[1], "utf8"));
+      assert.equal(results.results[0].pass, false);
+    });
 
-  test("the reference fix passes the cut-off-title check", { skip: haveSpryte ? false : "set SPRYTE_CHECKOUT" }, () => {
-    const r = fake("fake:solve");
-    assert.equal(r.status, 0, r.stdout + r.stderr);
-    assert.match(r.stdout, /cut-off-title arm B run 1: PASS/);
-  });
+    test(`the reference fix passes the ${task} check`, { skip: haveSpryte ? false : "set SPRYTE_CHECKOUT" }, () => {
+      const r = fake("fake:solve", task);
+      assert.equal(r.status, 0, r.stdout + r.stderr);
+      assert.match(r.stdout, new RegExp(`${task} arm B run 1: PASS`));
+    });
+  }
 
   test("refuses to run without a spryte checkout", () => {
     const r = spawnSync(process.execPath, [runner, "--spryte", join(scratch, "nowhere"), "--agent", "fake:noop"], { encoding: "utf8" });

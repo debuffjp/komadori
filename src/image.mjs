@@ -161,3 +161,36 @@ export async function findColor(png, rgb, tol = 60, region) {
     ),
   );
 }
+
+/**
+ * How bright a region is, leaving out the pixels near one colour (a title's white, say). `p75`, `p90`, `p95` and `p99` are
+ * percentiles of luma (0..255) over the rest, `bright` the number of pixels in the region with luma over `over`.
+ * @returns {Promise<{ p75: number, p90: number, p95: number, p99: number, mean: number, count: number, bright: number }>}
+ */
+export async function lumaStats(png, region, { exclude, tol = 60, over = 200 } = {}) {
+  return withPage((page) =>
+    page.evaluate(
+      async ({ png, region, exclude, tol, over }) => {
+        const bmp = await createImageBitmap(new Blob([Uint8Array.from(atob(png), (c) => c.charCodeAt(0))], { type: "image/png" }));
+        const cv = new OffscreenCanvas(bmp.width, bmp.height);
+        const cx = cv.getContext("2d", { willReadFrequently: true });
+        cx.drawImage(bmp, 0, 0);
+        const r = region ?? { x: 0, y: 0, w: bmp.width, h: bmp.height };
+        const d = cx.getImageData(r.x, r.y, r.w, r.h).data;
+        const lumas = [];
+        let bright = 0;
+        for (let p = 0; p < d.length; p += 4) {
+          const l = 0.2126 * d[p] + 0.7152 * d[p + 1] + 0.0722 * d[p + 2];
+          if (l > over) bright++;
+          if (exclude && Math.abs(d[p] - exclude[0]) + Math.abs(d[p + 1] - exclude[1]) + Math.abs(d[p + 2] - exclude[2]) <= tol) continue;
+          lumas.push(l);
+        }
+        lumas.sort((a, b) => a - b);
+        const mean = lumas.reduce((a, b) => a + b, 0) / Math.max(lumas.length, 1);
+        const at = (q) => lumas[Math.min(lumas.length - 1, Math.floor(lumas.length * q))] ?? 0;
+        return { p75: at(0.75), p90: at(0.9), p95: at(0.95), p99: at(0.99), mean, count: lumas.length, bright };
+      },
+      { png, region, exclude, tol, over },
+    ),
+  );
+}

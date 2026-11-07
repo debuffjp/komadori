@@ -12,7 +12,7 @@ import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, write
 import { homedir, tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { findColor } from "../../src/image.mjs";
+import { findColor, lumaStats } from "../../src/image.mjs";
 import { render } from "../../src/render.mjs";
 
 const here = fileURLToPath(new URL(".", import.meta.url));
@@ -139,7 +139,7 @@ async function one(taskId, arm, n) {
     seen = parseTranscript(r.stdout);
     status = r.status;
   }
-  const verdict = await task.default({ dir, render, findColor });
+  const verdict = await task.default({ dir, render, findColor, lumaStats });
   const t = seen.tools;
   return {
     task: taskId,
