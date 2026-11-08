@@ -1,0 +1,35 @@
+name: release
+# Publishes the version in package.json to npm. Run it from the Actions tab
+# ("Run workflow", works from the GitHub mobile app) or push a v* tag.
+# Uses npm trusted publishing: no token is stored. One-time setup on npmjs.com:
+# komadori > Settings > Trusted Publisher > GitHub Actions,
+# repository debuffjp/komadori, workflow release.yml.
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+permissions:
+  contents: read
+  id-token: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+      - run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - run: npm ci
+      - name: Refuse a version that is already on npm
+        run: |
+          v=$(node -p "require('./package.json').version")
+          if npm view "komadori@$v" version >/dev/null 2>&1; then
+            echo "komadori@$v is already published. Bump the version first."
+            exit 1
+          fi
+      # prepublishOnly runs the tests, so there is no separate test step.
+      - run: npm publish --provenance --access public
+        env:
+          SOFTWARE_GL: "1"
