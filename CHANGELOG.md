@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.2
 
 - Correction: `--capture canvas` is about 3x faster than a screenshot per frame, and 2.6-3.6x across four comparisons on two GPUs. The 0.1.0 notes and README said 3-3.6x, which left out the lowest run. The figures, every run and the script are in `bench/capture`.
 - The package description and README now open with the clip time: 11-14 seconds for 10 seconds of 1080p video.

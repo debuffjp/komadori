@@ -1,6 +1,6 @@
 {
   "name": "komadori",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Step a web page one frame at a time, check every frame, and make a clip: 10 s of a million boids at 1080p in 11-14 s. Works with any canvas engine.",
   "license": "MIT",
   "type": "module",
